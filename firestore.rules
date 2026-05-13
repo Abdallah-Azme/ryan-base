@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Leads collection
+    match /leads/{leadId} {
+      // Anyone can read if admin, owner can read their own
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      
+      // Allow creation if authenticated. If userId is provided, it must match the auth uid.
+      allow create: if isAuthenticated() && 
+        (!('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid);
+        
+      // Prevent editing after creation unless admin
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Appointment Bookings collection
+    match /appointment_bookings/{bookingId} {
+      // Anyone can read if admin, owner can read their own
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      
+      // Allow creation if authenticated. If userId is provided, it must match the auth uid.
+      allow create: if isAuthenticated() && 
+        (!('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid);
+        
+      // Prevent editing after creation unless admin
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Prevent users from writing to internal collections used for sending email
+    match /emailLogs/{logId} {
+      allow read, write: if false; // Only Cloud Functions can write here
+    }
+
+    // Default allow for development (since we don't know the full schema)
+    // Replace this with proper rules for production!
+    match /{collection}/{document=**} {
+      allow read, write: if collection != 'leads' && 
+                            collection != 'appointment_bookings' && 
+                            collection != 'emailLogs';
+    }
+  }
+}
