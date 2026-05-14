@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/More';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import MorePage from '@/features/more/components/more-page';
+
+export default function Page() {
+  return <MorePage />;
 }

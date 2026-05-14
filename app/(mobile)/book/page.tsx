@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/public/PublicBooking';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import PublicBookingPage from '@/features/public-booking/components/public-booking-page';
+
+export default function Page() {
+  return <PublicBookingPage />;
 }

@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/SupportChat';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import SupportChatPage from '@/features/support/components/support-chat-page';
+
+export default function Page() {
+  return <SupportChatPage />;
 }

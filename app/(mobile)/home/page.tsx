@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/Home';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import HomePage from '@/features/home/components/home-page';
+
+export default function Page() {
+  return <HomePage />;
 }

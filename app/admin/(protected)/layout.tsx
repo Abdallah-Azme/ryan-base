@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
+import AdminLayout from '@/components/layout/admin-layout';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase-client';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -16,7 +16,7 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
         router.replace('/admin/login');
         return;
       }
-      
+
       try {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists() && userDoc.data().role === 'admin') {
@@ -32,7 +32,11 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
     return () => unsubscribe();
   }, [router]);
 
-  if (isChecking) return <div className="h-screen w-full bg-[#020617] flex items-center justify-center text-white">Loading...</div>;
+  if (isChecking) {
+    return (
+      <div className="h-screen w-full bg-[#020617] flex items-center justify-center text-white">Loading...</div>
+    );
+  }
 
   return <AdminLayout>{children}</AdminLayout>;
 }

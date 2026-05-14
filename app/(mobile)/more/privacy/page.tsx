@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/MorePrivacy';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import PrivacyPage from '@/features/more/components/privacy-page';
+
+export default function Page() {
+  return <PrivacyPage />;
 }

@@ -1,7 +1,7 @@
 'use client';
-import MobileShell from '@/components/MobileShell';
-import BottomNav from '@/components/BottomNav';
-import ErrorBoundary from '@/components/ErrorBoundary';
+import MobileShell from '@/components/layout/mobile-shell';
+import BottomNav from '@/components/layout/bottom-nav';
+import ErrorBoundary from '@/components/layout/error-boundary';
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 
@@ -14,12 +14,18 @@ export default function MobileLayout({ children }: { children: React.ReactNode }
     <MobileShell>
       <ErrorBoundary>
         <AnimatePresence mode="wait">
-          <motion.div key={pathname || 'empty'} className="h-full w-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div
+            key={pathname || 'empty'}
+            className="h-full w-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             {children}
           </motion.div>
         </AnimatePresence>
       </ErrorBoundary>
-      {showBottomNav && <BottomNav />}
+      {showBottomNav ? <BottomNav /> : null}
     </MobileShell>
   );
 }

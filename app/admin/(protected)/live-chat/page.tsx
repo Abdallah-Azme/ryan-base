@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/admin/AdminLiveChat';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import AdminLiveChatPage from '@/features/admin-live-chat/components/admin-live-chat-page';
+
+export default function Page() {
+  return <AdminLiveChatPage />;
 }

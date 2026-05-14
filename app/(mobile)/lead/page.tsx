@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/LeadCapture';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import LeadCapturePage from '@/features/lead-capture/components/lead-capture-page';
+
+export default function Page() {
+  return <LeadCapturePage />;
 }

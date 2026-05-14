@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/admin/AdminRoles';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import AdminRolesPage from '@/features/admin-roles/components/admin-roles-page';
+
+export default function Page() {
+  return <AdminRolesPage />;
 }

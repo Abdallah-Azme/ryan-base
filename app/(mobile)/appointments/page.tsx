@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/MyAppointments';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import AppointmentsPage from '@/features/appointments/components/appointments-page';
+
+export default function Page() {
+  return <AppointmentsPage />;
 }

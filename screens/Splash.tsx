@@ -1,18 +1,16 @@
-"use client";
+'use client';
 
-// @ts-nocheck
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import SafeImage from '../components/SafeImage';
-import { auth } from '../lib/firebase-client';
+import SafeImage from '@/components/ui/safe-image';
+import { auth } from '@/lib/firebase-client';
 import { onAuthStateChanged } from 'firebase/auth';
 
-const Splash: React.FC = () => {
+export default function Splash() {
   const router = useRouter();
 
   useEffect(() => {
-    // Use onAuthStateChanged to detect auth state as soon as it's initialized
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         router.replace('/home');
@@ -35,7 +33,7 @@ const Splash: React.FC = () => {
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
         className="relative w-32 h-32 mb-12"
       >
         <SafeImage
@@ -45,14 +43,11 @@ const Splash: React.FC = () => {
         />
       </motion.div>
 
-      {/* Modern Circular Loader */}
       <motion.div
         animate={{ rotate: 360 }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
         className="w-8 h-8 rounded-full border-2 border-slate-700 border-t-primary shadow-[0_0_10px_rgba(29,183,240,0.4)]"
       />
     </motion.div>
   );
-};
-
-export default Splash;
+}

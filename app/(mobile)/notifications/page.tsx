@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/Notifications';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import NotificationsPage from '@/features/notifications/components/notifications-page';
+
+export default function Page() {
+  return <NotificationsPage />;
 }

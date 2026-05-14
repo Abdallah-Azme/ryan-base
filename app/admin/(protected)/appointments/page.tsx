@@ -1,6 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import Component from '@/screens/admin/AdminAppointments';
-export default function Page({ params }: { params?: any }) {
-  return <Component />;
+import AdminAppointmentsPage from '@/features/admin-appointments/components/admin-appointments-page';
+
+export default function Page() {
+  return <AdminAppointmentsPage />;
 }
