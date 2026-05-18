@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, CheckCircle, Send } from 'lucide-react';
 import Avatar from '@/components/ui/avatar';
 import { User } from '@/lib/userStore';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { notificationSchema, NotificationValues } from '../schemas/notification.schema';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
 interface NotificationComposerProps {
   targetType: 'all' | 'single';
@@ -16,25 +20,9 @@ interface NotificationComposerProps {
   dropdownRef: React.RefObject<HTMLDivElement | null>;
   filteredUsers: User[];
   handleUserSelect: (user: User) => void;
-  formData: {
-    title: string;
-    message: string;
-    imageUrl: string;
-    deepLink: string;
-    isScheduled: boolean;
-    scheduledDate: string;
-  };
-  setFormData: React.Dispatch<
-    React.SetStateAction<{
-      title: string;
-      message: string;
-      imageUrl: string;
-      deepLink: string;
-      isScheduled: boolean;
-      scheduledDate: string;
-    }>
-  >;
-  handleSubmit: (e: React.FormEvent) => Promise<void>;
+  formData: NotificationValues;
+  setFormData: React.Dispatch<React.SetStateAction<NotificationValues>>;
+  handleSubmit: (data: NotificationValues) => Promise<void>;
   isSending: boolean;
   successMessage: string | null;
 }
@@ -57,10 +45,29 @@ export default function NotificationComposer({
   isSending,
   successMessage,
 }: NotificationComposerProps) {
+  const form = useForm<NotificationValues>({
+    resolver: zodResolver(notificationSchema),
+    defaultValues: formData,
+  });
+
+  // Keep form data in sync
+  useEffect(() => {
+    form.reset(formData);
+  }, [formData, form]);
+
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      setFormData(value as NotificationValues);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, setFormData]);
+
+  const isScheduled = form.watch('isScheduled');
+
   return (
     <div className="lg:col-span-2 space-y-6">
       <div className="bg-[#0f172a] border border-white/10 rounded-2xl p-6 shadow-xl">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="space-y-3">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recipients</label>
             <div className="flex bg-slate-900 p-1 rounded-xl border border-white/5 w-full sm:w-fit">
@@ -182,76 +189,134 @@ export default function NotificationComposer({
           </div>
 
           <div className="space-y-4 pt-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Title</label>
-              <input
-                required
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                className="w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Message</label>
-              <textarea
-                required
-                rows={4}
-                value={formData.message}
-                onChange={(e) => setFormData((prev) => ({ ...prev, message: e.target.value }))}
-                className="w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors resize-none"
-              />
-            </div>
+            <Controller
+              name="title"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel className="font-bold uppercase tracking-wider">Title</FieldLabel>
+                  <input
+                    {...field}
+                    type="text"
+                    aria-invalid={fieldState.invalid}
+                    className={`w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors ${
+                      fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                    }`}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="message"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel className="font-bold uppercase tracking-wider">Message</FieldLabel>
+                  <textarea
+                    {...field}
+                    rows={4}
+                    aria-invalid={fieldState.invalid}
+                    className={`w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors resize-none ${
+                      fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                    }`}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Image URL (Optional)
-                </label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                  className="w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Deep Link (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.deepLink}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, deepLink: e.target.value }))}
-                  className="w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2 pt-2">
-              <input
-                type="checkbox"
-                id="schedule"
-                checked={formData.isScheduled}
-                onChange={(e) => setFormData((prev) => ({ ...prev, isScheduled: e.target.checked }))}
-                className="w-4 h-4 rounded border-slate-700 text-primary focus:ring-primary bg-slate-900"
+              <Controller
+                name="imageUrl"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel className="font-bold uppercase tracking-wider">Image URL (Optional)</FieldLabel>
+                    <input
+                      {...field}
+                      type="url"
+                      aria-invalid={fieldState.invalid}
+                      className={`w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors ${
+                        fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                      }`}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
               />
-              <label htmlFor="schedule" className="text-sm font-medium text-slate-300">
-                Schedule for later
-              </label>
+
+              <Controller
+                name="deepLink"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel className="font-bold uppercase tracking-wider">Deep Link (Optional)</FieldLabel>
+                    <input
+                      {...field}
+                      type="text"
+                      aria-invalid={fieldState.invalid}
+                      className={`w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors ${
+                        fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                      }`}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
             </div>
-            {formData.isScheduled ? (
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Schedule Date & Time
-                </label>
-                <input
-                  required
-                  type="datetime-local"
-                  value={formData.scheduledDate}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, scheduledDate: e.target.value }))}
-                  className="w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
+
+            <Controller
+              name="isScheduled"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="schedule"
+                    checked={field.value}
+                    onChange={field.onChange}
+                    className="w-4 h-4 rounded border-slate-700 text-primary focus:ring-primary bg-slate-900"
+                  />
+                  <label htmlFor="schedule" className="text-sm font-medium text-slate-300">
+                    Schedule for later
+                  </label>
+                </div>
+              )}
+            />
+
+            {isScheduled ? (
+              <Controller
+                name="scheduledDate"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel className="font-bold uppercase tracking-wider">Schedule Date & Time</FieldLabel>
+                    <input
+                      {...field}
+                      type="datetime-local"
+                      aria-invalid={fieldState.invalid}
+                      className={`w-full bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors ${
+                        fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                      }`}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
             ) : null}
+
             <button
               type="submit"
               disabled={isSending}

@@ -32,7 +32,7 @@ export default function LoginForm({
   });
 
   return (
-    <form onSubmit={form.handleSubmit(onLogin)} className="space-y-5">
+    <form onSubmit={form.handleSubmit(onLogin)} className="flex flex-col gap-5">
       <Controller
         name="email"
         control={form.control}
@@ -56,14 +56,12 @@ export default function LoginForm({
                 dir={dir}
               />
             </div>
-            {fieldState.invalid && (
-              <FieldError errors={[fieldState.error]} />
-            )}
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
       />
 
-      <div className="space-y-1">
+      <div className="flex flex-col gap-1">
         <Controller
           name="password"
           control={form.control}
@@ -87,15 +85,13 @@ export default function LoginForm({
                   dir={dir}
                 />
               </div>
-              {fieldState.invalid && (
-                <FieldError errors={[fieldState.error]} />
-              )}
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
-        <ForgotPasswordLink 
-          onClick={() => onForgotPassword(form.getValues('email'))} 
-          isLoading={resetLoading} 
+        <ForgotPasswordLink
+          onClick={() => onForgotPassword(form.getValues('email'))}
+          isLoading={resetLoading}
         />
       </div>
 
@@ -103,7 +99,7 @@ export default function LoginForm({
         type="submit"
         isLoading={loading}
         disabled={loading || resetLoading}
-        className="w-full mt-2 py-3.5"
+        className="w-full"
       >
         {loading ? t('auth.signin_loading') : t('auth.signin_btn')}
       </Button>

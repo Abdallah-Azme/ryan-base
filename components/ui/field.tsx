@@ -7,7 +7,7 @@ interface FieldProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Field = React.forwardRef<HTMLDivElement, FieldProps>(
   ({ children, className = '', ...props }, ref) => (
-    <div ref={ref} className={`space-y-1 w-full ${className}`} {...props}>
+    <div ref={ref} className={`flex flex-col gap-2 w-full ${className}`} {...props}>
       {children}
     </div>
   )
@@ -22,7 +22,7 @@ export const FieldLabel = React.forwardRef<HTMLLabelElement, FieldLabelProps>(
   ({ children, className = '', ...props }, ref) => (
     <label
       ref={ref}
-      className={`text-xs text-slate-300 font-medium ml-1 block ${className}`}
+      className={`text-xs text-slate-400 font-medium ms-1 block ${className}`}
       {...props}
     >
       {children}
@@ -64,7 +64,7 @@ export const FieldDescription = React.forwardRef<HTMLParagraphElement, FieldDesc
   ({ children, className = '', ...props }, ref) => (
     <p
       ref={ref}
-      className={`text-xs text-slate-500 ml-1 mt-1 ${className}`}
+      className={`text-xs text-slate-500 ms-1 mt-1 ${className}`}
       {...props}
     >
       {children}

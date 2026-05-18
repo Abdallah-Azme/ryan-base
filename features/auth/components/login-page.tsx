@@ -31,7 +31,7 @@ export default function LoginPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="flex flex-col h-full p-6 pt-12 relative overflow-y-auto no-scrollbar"
+      className="flex flex-col h-full p-6 pt-8 relative overflow-y-auto no-scrollbar"
     >
       <div className="w-full shrink-0">
         <div className="flex justify-center mb-8">
@@ -51,7 +51,7 @@ export default function LoginPage() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-2 mb-4"
+            className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-2 mb-5"
           >
             <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
             <span className="text-red-400 text-xs font-bold">{error.message}</span>
@@ -62,7 +62,7 @@ export default function LoginPage() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-start gap-2 mb-4"
+            className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-start gap-2 mb-5"
           >
             <CheckCircle size={16} className="text-emerald-400 shrink-0 mt-0.5" />
             <span className="text-emerald-400 text-xs font-bold">{successMessage}</span>
@@ -79,14 +79,14 @@ export default function LoginPage() {
         <Button
           variant="outline"
           onClick={handleGuestLogin}
-          className="w-full mt-4 py-3.5 flex items-center justify-center gap-2"
+          className="w-full mt-4 flex items-center justify-center gap-2"
         >
           <span>{t('auth.continue_guest')}</span>
           <ArrowRight size={16} className={dir === 'rtl' ? 'rotate-180' : ''} />
         </Button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center space-y-8 pb-4 min-h-[120px]">
+      <div className="flex-1 flex flex-col items-center justify-end space-y-8 pb-6 min-h-[100px]">
         <button
           type="button"
           onClick={() => router.push('/signup')}

@@ -22,8 +22,6 @@ export default function PublicBookingPage() {
     errorMsg,
     bookingRef,
     viewDate,
-    formData,
-    setFormData,
     handleBook,
     handlePrevMonth,
     handleNextMonth,
@@ -69,8 +67,6 @@ export default function PublicBookingPage() {
 
         {step === 2 ? (
           <GuestDetailsForm
-            formData={formData}
-            setFormData={setFormData}
             selectedDate={selectedDate}
             selectedTime={selectedTime}
             isSubmitting={isSubmitting}

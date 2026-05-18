@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRoles, roleStore, Role } from '@/lib/roleStore';
+import { RoleValues } from '../schemas/role.schema';
 
 export function useAdminRoles() {
   const { roles } = useRoles();
@@ -7,10 +8,10 @@ export function useAdminRoles() {
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RoleValues>({
     name: '',
     description: '',
-    permissions: [] as string[],
+    permissions: [],
   });
 
   const handleOpenModal = (role?: Role) => {
@@ -32,12 +33,11 @@ export function useAdminRoles() {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (data: RoleValues) => {
     if (editingRole) {
-      roleStore.updateRole(editingRole.id, formData);
+      roleStore.updateRole(editingRole.id, data);
     } else {
-      roleStore.addRole(formData);
+      roleStore.addRole(data);
     }
     setIsModalOpen(false);
   };

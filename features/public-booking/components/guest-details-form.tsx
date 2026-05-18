@@ -2,26 +2,37 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Loader2 } from 'lucide-react';
 import PhoneInput from '@/components/ui/phone-input';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { guestDetailsSchema, GuestDetailsValues } from '../schemas/guest-details.schema';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
 interface GuestDetailsFormProps {
-  formData: any;
-  setFormData: (val: any) => void;
   selectedDate: Date | null;
   selectedTime: string | null;
   isSubmitting: boolean;
-  onBook: (e: React.FormEvent) => void;
+  onBook: (data: GuestDetailsValues) => void;
   onChangeStep: () => void;
 }
 
 export default function GuestDetailsForm({
-  formData,
-  setFormData,
   selectedDate,
   selectedTime,
   isSubmitting,
   onBook,
   onChangeStep,
 }: GuestDetailsFormProps) {
+  const form = useForm<GuestDetailsValues>({
+    resolver: zodResolver(guestDetailsSchema),
+    defaultValues: {
+      guestName: '',
+      guestPhone: '',
+      guestEmail: '',
+      topic: '',
+      notes: '',
+    },
+  });
+
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
       <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-center justify-between">
@@ -36,63 +47,100 @@ export default function GuestDetailsForm({
         </button>
       </div>
 
-      <form onSubmit={onBook} className="space-y-4">
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400">Full Name *</label>
-          <div className="relative">
-            <User size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500" />
-            <input
-              required
-              type="text"
-              className="w-full bg-slate-800 border border-white/10 rounded-xl ps-10 pe-4 py-3 text-white focus:border-primary focus:outline-none"
-              value={formData.guestName}
-              onChange={(e) => setFormData({ ...formData, guestName: e.target.value })}
-            />
-          </div>
-        </div>
+      <form onSubmit={form.handleSubmit(onBook)} className="space-y-4">
+        <Controller
+          name="guestName"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Full Name <span className="text-red-400">*</span></FieldLabel>
+              <div className="relative">
+                <User size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  {...field}
+                  type="text"
+                  aria-invalid={fieldState.invalid}
+                  className={`w-full bg-slate-800 border border-white/10 rounded-xl ps-10 pe-4 py-3 text-white focus:outline-none transition-all ${
+                    fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : 'focus:border-primary'
+                  }`}
+                />
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400">Phone Number *</label>
-          <PhoneInput
-            value={formData.guestPhone}
-            onChange={(val) => setFormData({ ...formData, guestPhone: val })}
-            required
-          />
-        </div>
+        <Controller
+          name="guestPhone"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Phone Number <span className="text-red-400">*</span></FieldLabel>
+              <PhoneInput value={field.value} onChange={field.onChange} required />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400">Email Address (Optional)</label>
-          <div className="relative">
-            <Mail size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500" />
-            <input
-              type="email"
-              className="w-full bg-slate-800 border border-white/10 rounded-xl ps-10 pe-4 py-3 text-white focus:border-primary focus:outline-none"
-              value={formData.guestEmail}
-              onChange={(e) => setFormData({ ...formData, guestEmail: e.target.value })}
-            />
-          </div>
-        </div>
+        <Controller
+          name="guestEmail"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Email Address (Optional)</FieldLabel>
+              <div className="relative">
+                <Mail size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  {...field}
+                  type="email"
+                  aria-invalid={fieldState.invalid}
+                  className={`w-full bg-slate-800 border border-white/10 rounded-xl ps-10 pe-4 py-3 text-white focus:outline-none transition-all ${
+                    fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : 'focus:border-primary'
+                  }`}
+                />
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400">Topic *</label>
-          <input
-            required
-            type="text"
-            className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none"
-            placeholder="e.g. Project Consultation"
-            value={formData.topic}
-            onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-          />
-        </div>
+        <Controller
+          name="topic"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Topic <span className="text-red-400">*</span></FieldLabel>
+              <input
+                {...field}
+                type="text"
+                aria-invalid={fieldState.invalid}
+                className={`w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none transition-all ${
+                  fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : 'focus:border-primary'
+                }`}
+                placeholder="e.g. Project Consultation"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400">Notes (Optional)</label>
-          <textarea
-            className="w-full h-24 bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none resize-none"
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          />
-        </div>
+        <Controller
+          name="notes"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>Notes (Optional)</FieldLabel>
+              <textarea
+                {...field}
+                aria-invalid={fieldState.invalid}
+                className={`w-full h-24 bg-slate-800 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none transition-all resize-none ${
+                  fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : 'focus:border-primary'
+                }`}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
 
         <button
           type="submit"

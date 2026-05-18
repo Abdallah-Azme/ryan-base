@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useProjects, projectStore, Project } from '@/lib/projectStore';
+import { ProjectValues } from '../schemas/project.schema';
 
 export function useAdminProjects() {
   const { projects } = useProjects();
@@ -8,7 +9,7 @@ export function useAdminProjects() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProjectValues>({
     name: '',
     description: '',
     link: '',
@@ -47,12 +48,11 @@ export function useAdminProjects() {
     setEditingProject(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (data: ProjectValues) => {
     if (editingProject) {
-      projectStore.updateProject(editingProject.id, formData);
+      projectStore.updateProject(editingProject.id, data);
     } else {
-      projectStore.addProject(formData);
+      projectStore.addProject(data);
     }
     handleCloseModal();
   };

@@ -1,27 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { X, Image as ImageIcon, Save } from 'lucide-react';
 import { Project } from '@/lib/projectStore';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { projectSchema, ProjectValues } from '../schemas/project.schema';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
 interface ProjectFormModalProps {
   onClose: () => void;
   editingProject: Project | null;
-  formData: {
-    name: string;
-    description: string;
-    link: string;
-    logoUrl: string;
-  };
-  setFormData: React.Dispatch<
-    React.SetStateAction<{
-      name: string;
-      description: string;
-      link: string;
-      logoUrl: string;
-    }>
-  >;
-  onSubmit: (e: React.FormEvent) => void;
+  formData: ProjectValues;
+  setFormData: React.Dispatch<React.SetStateAction<ProjectValues>>;
+  onSubmit: (data: ProjectValues) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -33,6 +25,22 @@ export default function ProjectFormModal({
   onSubmit,
   onFileChange,
 }: ProjectFormModalProps) {
+  const form = useForm<ProjectValues>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: formData,
+  });
+
+  useEffect(() => {
+    form.reset(formData);
+  }, [formData, form]);
+
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      setFormData(value as ProjectValues);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, setFormData]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
       <motion.div
@@ -51,80 +59,118 @@ export default function ProjectFormModal({
         </div>
 
         <div className="p-6 overflow-y-auto custom-scrollbar">
-          <form id="projectForm" onSubmit={onSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 ml-1">
-                Project Name <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors"
-                placeholder="e.g. Raiyan CRM"
-              />
-            </div>
+          <form id="projectForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Project Name <span className="text-red-400">*</span></FieldLabel>
+                  <input
+                    {...field}
+                    type="text"
+                    aria-invalid={fieldState.invalid}
+                    className={`w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors ${
+                      fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                    }`}
+                    placeholder="e.g. Raiyan CRM"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 ml-1">
-                Short Description <span className="text-red-400">*</span>
-              </label>
-              <textarea
-                required
-                maxLength={120}
-                value={formData.description}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors h-24 resize-none"
-                placeholder="Brief overview (max 120 chars)"
-              />
-              <div className="text-right text-[10px] text-slate-500">
-                {formData.description.length}/120
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 ml-1">
-                Project URL <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="url"
-                required
-                value={formData.link}
-                onChange={(e) => setFormData((prev) => ({ ...prev, link: e.target.value }))}
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors"
-                placeholder="https://..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-300 ml-1">Project Logo</label>
-
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={formData.logoUrl}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, logoUrl: e.target.value }))}
-                  className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors text-sm"
-                  placeholder="Paste image URL..."
-                />
-                <label className="bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-xl px-4 flex items-center justify-center cursor-pointer transition-colors">
-                  <ImageIcon size={20} className="text-slate-400" />
-                  <input type="file" accept="image/*" onChange={onFileChange} className="hidden" />
-                </label>
-              </div>
-
-              {formData.logoUrl ? (
-                <div className="mt-2 w-16 h-16 bg-slate-800 rounded-xl border border-white/10 overflow-hidden relative group">
-                  <div className="relative w-full h-full">
-                    <Image src={formData.logoUrl} alt="Preview" fill className="object-cover" />
+            <Controller
+              name="description"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Short Description <span className="text-red-400">*</span></FieldLabel>
+                  <textarea
+                    {...field}
+                    maxLength={120}
+                    aria-invalid={fieldState.invalid}
+                    className={`w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors h-24 resize-none ${
+                      fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                    }`}
+                    placeholder="Brief overview (max 120 chars)"
+                  />
+                  <div className="flex justify-between mt-1">
+                    {fieldState.invalid ? (
+                      <FieldError errors={[fieldState.error]} />
+                    ) : (
+                      <span />
+                    )}
+                    <div className="text-[10px] text-slate-500">
+                      {(field.value || '').length}/120
+                    </div>
                   </div>
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <span className="text-[10px] text-white">Preview</span>
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="link"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Project URL <span className="text-red-400">*</span></FieldLabel>
+                  <input
+                    {...field}
+                    type="url"
+                    aria-invalid={fieldState.invalid}
+                    className={`w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors ${
+                      fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                    }`}
+                    placeholder="https://..."
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="logoUrl"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Project Logo</FieldLabel>
+                  <div className="flex gap-2">
+                    <input
+                      {...field}
+                      value={field.value || ''}
+                      type="text"
+                      aria-invalid={fieldState.invalid}
+                      className={`flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors text-sm ${
+                        fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                      }`}
+                      placeholder="Paste image URL..."
+                    />
+                    <label className="bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-xl px-4 flex items-center justify-center cursor-pointer transition-colors shrink-0">
+                      <ImageIcon size={20} className="text-slate-400" />
+                      <input type="file" accept="image/*" onChange={onFileChange} className="hidden" />
+                    </label>
                   </div>
-                </div>
-              ) : null}
-            </div>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                  {field.value ? (
+                    <div className="mt-2 w-16 h-16 bg-slate-800 rounded-xl border border-white/10 overflow-hidden relative group">
+                      <div className="relative w-full h-full">
+                        <Image src={field.value} alt="Preview" fill className="object-cover" />
+                      </div>
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <span className="text-[10px] text-white">Preview</span>
+                      </div>
+                    </div>
+                  ) : null}
+                </Field>
+              )}
+            />
           </form>
         </div>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { marketingStore, useMarketingHistory } from '@/lib/marketingNotifications';
 import { useUsers, User } from '@/lib/userStore';
+import { NotificationValues } from '../schemas/notification.schema';
 
 export function useAdminMarketing() {
   const { history } = useMarketingHistory();
@@ -11,7 +12,7 @@ export function useAdminMarketing() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<NotificationValues>({
     title: '',
     message: '',
     imageUrl: '',
@@ -53,8 +54,7 @@ export function useAdminMarketing() {
     setShowUserDropdown(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: NotificationValues) => {
     if (targetType === 'single' && !selectedUser) return;
 
     setIsSending(true);
@@ -66,13 +66,13 @@ export function useAdminMarketing() {
           userId: selectedUser?.id,
           userName: selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : undefined,
         },
-        title: formData.title,
-        body: formData.message,
-        imageUrl: formData.imageUrl,
-        deepLink: formData.deepLink,
+        title: data.title,
+        body: data.message,
+        imageUrl: data.imageUrl,
+        deepLink: data.deepLink,
         scheduledAt:
-          formData.isScheduled && formData.scheduledDate
-            ? new Date(formData.scheduledDate).getTime()
+          data.isScheduled && data.scheduledDate
+            ? new Date(data.scheduledDate).getTime()
             : undefined,
       });
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { collectionGroup, getDocs, query, doc, updateDoc } from 'firebase/firestore';
 import { UserProject, ProjectStatus } from '@/lib/userProjectsStore';
 import { app, db } from '@/lib/firebase-client';
+import { UserProjectEditValues } from '../schemas/user-project-edit.schema';
 
 export const statusOptions: ProjectStatus[] = [
   'pricing',
@@ -33,12 +34,12 @@ export function useAdminUserProjects() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [editingProject, setEditingProject] = useState<UserProject | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UserProjectEditValues>({
     name: '',
     description: '',
-    estimatedPrice: '' as string | number,
-    estimatedDuration: '' as string | number,
-    status: 'pricing' as ProjectStatus,
+    estimatedPrice: '',
+    estimatedDuration: '',
+    status: 'pricing',
     projectUrl: '',
     industry: '',
     industryOther: '',
@@ -126,8 +127,7 @@ export function useAdminUserProjects() {
     setEditingProject(project);
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (data: UserProjectEditValues) => {
     if (!editingProject || !db) return;
 
     setIsSaving(true);
@@ -139,14 +139,14 @@ export function useAdminUserProjects() {
       const docRef = doc(db, 'users', editingProject.ownerId, 'projects', editingProject.id);
 
       const updates = {
-        name: formData.name,
-        description: formData.description,
-        estimatedPrice: formData.estimatedPrice !== '' ? Number(formData.estimatedPrice) : null,
-        estimatedDuration: formData.estimatedDuration !== '' ? Number(formData.estimatedDuration) : null,
-        status: formData.status,
-        projectUrl: formData.projectUrl || null,
-        industry: formData.industry,
-        industryOther: formData.industryOther || null,
+        name: data.name,
+        description: data.description,
+        estimatedPrice: data.estimatedPrice !== '' ? Number(data.estimatedPrice) : null,
+        estimatedDuration: data.estimatedDuration !== '' ? Number(data.estimatedDuration) : null,
+        status: data.status,
+        projectUrl: data.projectUrl || null,
+        industry: data.industry,
+        industryOther: data.industryOther || null,
       };
 
       await updateDoc(docRef, updates);

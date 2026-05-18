@@ -5,6 +5,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { leadStore } from '@/lib/leadStore';
 import { auth, db } from '@/lib/firebase-client';
 import { useTranslation } from '@/lib/i18nContext';
+import { ClaimValues } from '../schemas/claim.schema';
 
 export type ClaimStatus = 'validating' | 'valid' | 'invalid' | 'claiming' | 'success';
 
@@ -17,19 +18,6 @@ export function useClaim() {
   const [status, setStatus] = useState<ClaimStatus>('validating');
   const [errorMsg, setErrorMsg] = useState('');
   const [leadId, setLeadId] = useState<string | null>(null);
-
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-  });
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const isEmailValid = emailRegex.test(formData.email.trim());
-  const showEmailError = formData.email.length > 0 && !isEmailValid;
 
   useEffect(() => {
     if (!token) {
@@ -49,29 +37,22 @@ export function useClaim() {
     });
   }, [token]);
 
-  const handleClaim = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleClaim = async (data: ClaimValues) => {
     if (status !== 'valid' || !token || !leadId) return;
-
-    const trimmedEmail = formData.email.trim();
-    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
-      alert(t('val.req_email'));
-      return;
-    }
 
     setStatus('claiming');
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, formData.password);
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email.trim(), data.password);
       const user = userCredential.user;
-      await updateProfile(user, { displayName: `${formData.firstName} ${formData.lastName}` });
+      await updateProfile(user, { displayName: `${data.firstName} ${data.lastName}` });
 
       if (db) {
         await setDoc(doc(db, 'users', user.uid), {
           id: user.uid,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: trimmedEmail,
-          phone: formData.phone,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email.trim(),
+          phone: data.phone,
           role: 'Customer',
           status: 'Active',
           createdAt: serverTimestamp(),
@@ -102,9 +83,6 @@ export function useClaim() {
     setLanguage,
     status,
     errorMsg,
-    formData,
-    setFormData,
-    showEmailError,
     handleClaim,
   };
 }

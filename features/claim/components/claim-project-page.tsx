@@ -12,9 +12,6 @@ export default function ClaimProjectPage() {
     setLanguage,
     status,
     errorMsg,
-    formData,
-    setFormData,
-    showEmailError,
     handleClaim,
   } = useClaim();
 
@@ -75,9 +72,6 @@ export default function ClaimProjectPage() {
         </div>
 
         <ClaimForm
-          formData={formData}
-          setFormData={setFormData}
-          showEmailError={showEmailError}
           status={status}
           onSubmit={handleClaim}
           t={t}

@@ -1,36 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Briefcase, Activity, Link as LinkIcon, Loader2, Save } from 'lucide-react';
+import { X, Briefcase, Activity, Link as LinkIcon, DollarSign, Clock, Loader2, Save } from 'lucide-react';
 import { UserProject, ProjectStatus } from '@/lib/userProjectsStore';
 import { INDUSTRIES, statusOptions } from '../hooks/use-admin-user-projects';
-import PriceDurationFields from './price-duration-fields';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { userProjectEditSchema, UserProjectEditValues } from '../schemas/user-project-edit.schema';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
 interface UserProjectEditDrawerProps {
   editingProject: UserProject | null;
   onClose: () => void;
-  formData: {
-    name: string;
-    description: string;
-    estimatedPrice: string | number;
-    estimatedDuration: string | number;
-    status: ProjectStatus;
-    projectUrl: string;
-    industry: string;
-    industryOther: string;
-  };
-  setFormData: React.Dispatch<
-    React.SetStateAction<{
-      name: string;
-      description: string;
-      estimatedPrice: string | number;
-      estimatedDuration: string | number;
-      status: ProjectStatus;
-      projectUrl: string;
-      industry: string;
-      industryOther: string;
-    }>
-  >;
-  onSave: (e: React.FormEvent) => Promise<void>;
+  formData: UserProjectEditValues;
+  setFormData: React.Dispatch<React.SetStateAction<UserProjectEditValues>>;
+  onSave: (data: UserProjectEditValues) => Promise<void>;
   isSaving: boolean;
 }
 
@@ -42,6 +25,24 @@ export default function UserProjectEditDrawer({
   onSave,
   isSaving,
 }: UserProjectEditDrawerProps) {
+  const form = useForm<UserProjectEditValues>({
+    resolver: zodResolver(userProjectEditSchema),
+    defaultValues: formData,
+  });
+
+  useEffect(() => {
+    form.reset(formData);
+  }, [formData, form]);
+
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      setFormData(value as UserProjectEditValues);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, setFormData]);
+
+  const industry = form.watch('industry');
+
   if (!editingProject) return null;
 
   return (
@@ -60,99 +61,193 @@ export default function UserProjectEditDrawer({
         </div>
 
         <div className="p-6 overflow-y-auto custom-scrollbar">
-          <form id="editForm" onSubmit={onSave} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 ml-1">Project Name</label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 ml-1">Industry</label>
-              <div className="relative">
-                <Briefcase size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <select
-                  value={formData.industry}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, industry: e.target.value }))}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-9 pr-4 text-white focus:border-primary focus:outline-none transition-colors appearance-none"
-                >
-                  <option value="">Select Industry</option>
-                  {INDUSTRIES.map((ind) => (
-                    <option key={ind} value={ind}>
-                      {ind}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {formData.industry === 'Other' ? (
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300 ml-1">Specify Industry</label>
-                <input
-                  type="text"
-                  value={formData.industryOther}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, industryOther: e.target.value }))}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors"
-                  placeholder="e.g. Automotive"
-                />
-              </div>
-            ) : null}
-
-            <PriceDurationFields
-              estimatedPrice={formData.estimatedPrice}
-              estimatedDuration={formData.estimatedDuration}
-              setFormData={setFormData}
+          <form id="editForm" onSubmit={form.handleSubmit(onSave)} className="space-y-4">
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Project Name</FieldLabel>
+                  <input
+                    {...field}
+                    type="text"
+                    aria-invalid={fieldState.invalid}
+                    className={`w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors ${
+                      fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                    }`}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
             />
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 ml-1">Project Status</label>
-              <div className="relative">
-                <Activity size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <select
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, status: e.target.value as ProjectStatus }))
-                  }
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-9 pr-4 text-white focus:border-primary focus:outline-none transition-colors appearance-none capitalize"
-                >
-                  {statusOptions.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <Controller
+              name="industry"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Industry</FieldLabel>
+                  <div className="relative">
+                    <Briefcase size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <select
+                      {...field}
+                      aria-invalid={fieldState.invalid}
+                      className={`w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-9 pr-4 text-white focus:border-primary focus:outline-none transition-colors appearance-none ${
+                        fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                      }`}
+                    >
+                      <option value="">Select Industry</option>
+                      {INDUSTRIES.map((ind) => (
+                        <option key={ind} value={ind}>{ind}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 ml-1">Project URL</label>
-              <div className="relative">
-                <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type="url"
-                  value={formData.projectUrl}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, projectUrl: e.target.value }))}
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-9 pr-4 text-white focus:border-primary focus:outline-none transition-colors"
-                  placeholder="https://..."
-                />
-              </div>
-            </div>
+            {industry === 'Other' ? (
+              <Controller
+                name="industryOther"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Specify Industry</FieldLabel>
+                    <input
+                      {...field}
+                      type="text"
+                      aria-invalid={fieldState.invalid}
+                      className={`w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors ${
+                        fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                      }`}
+                      placeholder="e.g. Automotive"
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+            ) : null}
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-300 ml-1">Description</label>
-              <textarea
-                maxLength={250}
-                value={formData.description}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors h-24 resize-none"
+            <div className="grid grid-cols-2 gap-4">
+              <Controller
+                name="estimatedPrice"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Estimated Price (KWD)</FieldLabel>
+                    <div className="relative">
+                      <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <input
+                        {...field}
+                        type="number"
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        aria-invalid={fieldState.invalid}
+                        className={`w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-9 pr-4 text-white focus:border-primary focus:outline-none transition-colors ${
+                          fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                        }`}
+                        placeholder="e.g. 1500"
+                      />
+                    </div>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="estimatedDuration"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Est. Duration (Days)</FieldLabel>
+                    <div className="relative">
+                      <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <input
+                        {...field}
+                        type="number"
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        aria-invalid={fieldState.invalid}
+                        className={`w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-9 pr-4 text-white focus:border-primary focus:outline-none transition-colors ${
+                          fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                        }`}
+                        placeholder="e.g. 21"
+                      />
+                    </div>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
               />
             </div>
+
+            <Controller
+              name="status"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Project Status</FieldLabel>
+                  <div className="relative">
+                    <Activity size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <select
+                      {...field}
+                      aria-invalid={fieldState.invalid}
+                      className={`w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-9 pr-4 text-white focus:border-primary focus:outline-none transition-colors appearance-none capitalize ${
+                        fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                      }`}
+                    >
+                      {statusOptions.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="projectUrl"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Project URL</FieldLabel>
+                  <div className="relative">
+                    <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input
+                      {...field}
+                      type="url"
+                      value={field.value ?? ''}
+                      aria-invalid={fieldState.invalid}
+                      className={`w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-9 pr-4 text-white focus:border-primary focus:outline-none transition-colors ${
+                        fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                      }`}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="description"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Description</FieldLabel>
+                  <textarea
+                    {...field}
+                    maxLength={250}
+                    aria-invalid={fieldState.invalid}
+                    className={`w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:outline-none transition-colors h-24 resize-none ${
+                      fieldState.invalid ? 'border-red-500/50 focus:border-red-500' : ''
+                    }`}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
           </form>
         </div>
 

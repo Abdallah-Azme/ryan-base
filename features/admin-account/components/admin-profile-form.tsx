@@ -62,7 +62,7 @@ export default function AdminProfileForm({
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel className="uppercase tracking-wider font-bold">First Name</FieldLabel>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <User className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                     <input
                       {...field}
                       type="text"
@@ -86,7 +86,7 @@ export default function AdminProfileForm({
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel className="uppercase tracking-wider font-bold">Last Name</FieldLabel>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <User className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                     <input
                       {...field}
                       type="text"
@@ -111,7 +111,7 @@ export default function AdminProfileForm({
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel className="uppercase tracking-wider font-bold">Phone Number</FieldLabel>
                 <div className="relative" dir="ltr">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                  <Phone className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                   <input
                     {...field}
                     type="tel"
@@ -130,9 +130,9 @@ export default function AdminProfileForm({
           />
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ms-1">Email Address</label>
             <div className="relative opacity-60">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+              <Mail className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
               <input
                 type="email"
                 value={defaultValues.email || ''}

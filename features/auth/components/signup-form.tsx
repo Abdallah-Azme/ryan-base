@@ -33,7 +33,7 @@ export default function SignupForm({
   });
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
       <div className="grid grid-cols-2 gap-4">
         <Controller
           name="firstName"
@@ -48,7 +48,7 @@ export default function SignupForm({
                 <input
                   {...field}
                   aria-invalid={fieldState.invalid}
-                  className={`w-full bg-slate-800 rounded-xl ps-10 pe-4 py-3 text-white border focus:outline-none transition-all ${
+                  className={`w-full bg-slate-800 rounded-xl ps-10 pe-4 py-3.5 text-white border focus:outline-none transition-all ${
                     fieldState.invalid
                       ? 'border-red-500/50 focus:border-red-500'
                       : 'border-white/10 focus:border-primary'
@@ -75,7 +75,7 @@ export default function SignupForm({
                 <input
                   {...field}
                   aria-invalid={fieldState.invalid}
-                  className={`w-full bg-slate-800 rounded-xl ps-10 pe-4 py-3 text-white border focus:outline-none transition-all ${
+                  className={`w-full bg-slate-800 rounded-xl ps-10 pe-4 py-3.5 text-white border focus:outline-none transition-all ${
                     fieldState.invalid
                       ? 'border-red-500/50 focus:border-red-500'
                       : 'border-white/10 focus:border-primary'
@@ -119,7 +119,7 @@ export default function SignupForm({
                 {...field}
                 type="email"
                 aria-invalid={fieldState.invalid}
-                className={`w-full bg-slate-800 rounded-xl ps-10 pe-4 py-3 text-white border focus:outline-none transition-all ${
+                className={`w-full bg-slate-800 rounded-xl ps-10 pe-4 py-3.5 text-white border focus:outline-none transition-all ${
                   fieldState.invalid
                     ? 'border-red-500/50 focus:border-red-500'
                     : 'border-white/10 focus:border-primary'
@@ -202,7 +202,7 @@ export default function SignupForm({
         )}
       />
 
-      <Button type="submit" isLoading={loading} disabled={loading} className="w-full py-3.5 mt-4">
+      <Button type="submit" isLoading={loading} disabled={loading} className="w-full py-3.5 mt-6">
         {loading ? t('auth.signup_loading') : t('auth.signup_btn')}
       </Button>
     </form>

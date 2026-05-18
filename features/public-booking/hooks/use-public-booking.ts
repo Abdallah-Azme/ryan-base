@@ -3,6 +3,7 @@ import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firesto
 import { useAppointments, appointmentStore } from '@/lib/appointmentStore';
 import { useTranslation } from '@/lib/i18nContext';
 import { db } from '@/lib/firebase-client';
+import { GuestDetailsValues } from '../schemas/guest-details.schema';
 
 export function usePublicBooking() {
   const { t, dir } = useTranslation();
@@ -18,14 +19,6 @@ export function usePublicBooking() {
   const [bookingRef, setBookingRef] = useState<string | null>(null);
   const [viewDate, setViewDate] = useState(new Date());
 
-  const [formData, setFormData] = useState({
-    topic: '',
-    meetingType: 'online',
-    notes: '',
-    guestName: '',
-    guestEmail: '',
-    guestPhone: '',
-  });
 
   useEffect(() => {
     let isActive = true;
@@ -52,8 +45,7 @@ export function usePublicBooking() {
     };
   }, [selectedDate]);
 
-  const handleBook = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleBook = async (data: GuestDetailsValues) => {
     if (!selectedDate || !selectedTime) return;
 
     setIsSubmitting(true);
@@ -84,12 +76,12 @@ export function usePublicBooking() {
       const payload = {
         source: 'guest',
         userId: null,
-        guestName: formData.guestName,
-        guestPhone: formData.guestPhone,
-        guestEmail: formData.guestEmail || null,
-        topic: formData.topic || 'Guest Meeting',
-        notes: formData.notes || '',
-        meetingType: formData.meetingType || 'online',
+        guestName: data.guestName,
+        guestPhone: data.guestPhone,
+        guestEmail: data.guestEmail || null,
+        topic: data.topic || 'Guest Meeting',
+        notes: data.notes || '',
+        meetingType: 'online',
         status: 'pending',
         dateKey,
         time: selectedTime,
@@ -155,8 +147,6 @@ export function usePublicBooking() {
     errorMsg,
     bookingRef,
     viewDate,
-    formData,
-    setFormData,
     handleBook,
     handlePrevMonth,
     handleNextMonth,
