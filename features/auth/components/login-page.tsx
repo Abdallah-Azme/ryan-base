@@ -13,10 +13,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { t, language, setLanguage, dir } = useTranslation();
   const {
-    email,
-    setEmail,
-    password,
-    setPassword,
     error,
     loading,
     resetLoading,
@@ -74,10 +70,6 @@ export default function LoginPage() {
         ) : null}
 
         <LoginForm
-          email={email}
-          setEmail={setEmail}
-          password={password}
-          setPassword={setPassword}
           loading={loading}
           resetLoading={resetLoading}
           onLogin={login}

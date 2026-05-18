@@ -2,24 +2,22 @@ import { useState } from 'react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
 import { useTranslation } from '@/lib/i18nContext';
+import { LoginValues } from '../schemas/login.schema';
 
 export function useLogin() {
   const { t } = useTranslation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState<{ code?: string; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const login = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const login = async (data: LoginValues) => {
     setError(null);
     setSuccessMessage(null);
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, data.email, data.password);
     } catch (err: any) {
       console.error("Login Error", err);
       let message = t('auth.invalid_cred');
@@ -31,7 +29,7 @@ export function useLogin() {
     }
   };
 
-  const forgotPassword = async () => {
+  const forgotPassword = async (email: string) => {
     if (!email) {
       setError({ message: t('auth.email_required') });
       return;
@@ -58,10 +56,6 @@ export function useLogin() {
   };
 
   return {
-    email,
-    setEmail,
-    password,
-    setPassword,
     error,
     loading,
     resetLoading,

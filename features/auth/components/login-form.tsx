@@ -1,26 +1,21 @@
 import React from 'react';
 import { Mail, Lock } from 'lucide-react';
 import { useTranslation } from '@/lib/i18nContext';
-import Input from '@/components/ui/input';
 import Button from '@/components/ui/button';
 import ForgotPasswordLink from './forgot-password-link';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema, LoginValues } from '../schemas/login.schema';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
 interface LoginFormProps {
-  email: string;
-  setEmail: (val: string) => void;
-  password: string;
-  setPassword: (val: string) => void;
   loading: boolean;
   resetLoading: boolean;
-  onLogin: (e: React.FormEvent) => void;
-  onForgotPassword: () => void;
+  onLogin: (data: LoginValues) => void;
+  onForgotPassword: (email: string) => void;
 }
 
 export default function LoginForm({
-  email,
-  setEmail,
-  password,
-  setPassword,
   loading,
   resetLoading,
   onLogin,
@@ -28,29 +23,80 @@ export default function LoginForm({
 }: LoginFormProps) {
   const { t, dir } = useTranslation();
 
+  const form = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
   return (
-    <form onSubmit={onLogin} className="space-y-5">
-      <Input
-        label={t('auth.email')}
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        icon={<Mail size={18} />}
-        required
-        dir={dir}
+    <form onSubmit={form.handleSubmit(onLogin)} className="space-y-5">
+      <Controller
+        name="email"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel>{t('auth.email')}</FieldLabel>
+            <div className="relative">
+              <div className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none flex items-center justify-center">
+                <Mail size={18} />
+              </div>
+              <input
+                {...field}
+                type="email"
+                aria-invalid={fieldState.invalid}
+                className={`w-full bg-slate-800 rounded-xl ps-10 pe-4 py-3 text-white border focus:outline-none transition-all ${
+                  fieldState.invalid
+                    ? 'border-red-500/50 focus:border-red-500'
+                    : 'border-white/10 focus:border-primary'
+                }`}
+                placeholder="name@example.com"
+                dir={dir}
+              />
+            </div>
+            {fieldState.invalid && (
+              <FieldError errors={[fieldState.error]} />
+            )}
+          </Field>
+        )}
       />
 
       <div className="space-y-1">
-        <Input
-          label={t('auth.password')}
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          icon={<Lock size={18} />}
-          required
-          dir={dir}
+        <Controller
+          name="password"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>{t('auth.password')}</FieldLabel>
+              <div className="relative">
+                <div className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none flex items-center justify-center">
+                  <Lock size={18} />
+                </div>
+                <input
+                  {...field}
+                  type="password"
+                  aria-invalid={fieldState.invalid}
+                  className={`w-full bg-slate-800 rounded-xl ps-10 pe-4 py-3 text-white border focus:outline-none transition-all ${
+                    fieldState.invalid
+                      ? 'border-red-500/50 focus:border-red-500'
+                      : 'border-white/10 focus:border-primary'
+                  }`}
+                  placeholder="••••••"
+                  dir={dir}
+                />
+              </div>
+              {fieldState.invalid && (
+                <FieldError errors={[fieldState.error]} />
+              )}
+            </Field>
+          )}
         />
-        <ForgotPasswordLink onClick={onForgotPassword} isLoading={resetLoading} />
+        <ForgotPasswordLink 
+          onClick={() => onForgotPassword(form.getValues('email'))} 
+          isLoading={resetLoading} 
+        />
       </div>
 
       <Button

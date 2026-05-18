@@ -10,15 +10,8 @@ export default function SignupPage() {
   const router = useRouter();
   const { t, dir, language, setLanguage } = useTranslation();
   const {
-    formData,
-    agreed,
-    setAgreed,
     error,
     loading,
-    handleChange,
-    handlePhoneChange,
-    isPasswordMatch,
-    showEmailError,
     signup,
   } = useSignup();
 
@@ -53,14 +46,7 @@ export default function SignupPage() {
         ) : null}
 
         <SignupForm
-          formData={formData}
-          handleChange={handleChange}
-          handlePhoneChange={handlePhoneChange}
-          agreed={agreed}
-          setAgreed={setAgreed}
           loading={loading}
-          showEmailError={showEmailError}
-          isPasswordMatch={isPasswordMatch}
           onSubmit={signup}
         />
       </div>

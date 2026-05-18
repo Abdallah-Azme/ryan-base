@@ -3,24 +3,22 @@ import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase-client';
+import { AdminLoginValues } from '../schemas/admin-login.schema';
 
 export function useAdminLogin() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isBootstrapping, setIsBootstrapping] = useState(false);
   const [bootstrapMessage, setBootstrapMessage] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (data: AdminLoginValues) => {
     setError('');
     setIsLoading(true);
 
     try {
-      const authEmail = `admin_${email}`;
-      const userCredential = await signInWithEmailAndPassword(auth, authEmail, password);
+      const authEmail = `admin_${data.email}`;
+      const userCredential = await signInWithEmailAndPassword(auth, authEmail, data.password);
       const user = userCredential.user;
 
       if (!db) throw new Error('Database not initialized');
@@ -65,7 +63,7 @@ export function useAdminLogin() {
         "Create or Recover Super Admin (Nader)?\n\nIf the account exists, we'll try to update permissions (requires default password)."
       )
     )
-      return;
+      return null;
 
     setIsBootstrapping(true);
     setError('');
@@ -141,23 +139,20 @@ export function useAdminLogin() {
         );
 
         setBootstrapMessage(`${actionTaken} successfully! You can now log in.`);
-        setEmail(realEmail);
-        setPassword(defaultPassword);
+        return { email: realEmail, password: defaultPassword };
       }
+      return null;
     } catch (err: any) {
       console.error('Bootstrap Error:', err);
       const msg = err.message || 'Failed to initialize system';
       setError(msg);
+      return null;
     } finally {
       setIsBootstrapping(false);
     }
   };
 
   return {
-    email,
-    setEmail,
-    password,
-    setPassword,
     error,
     isLoading,
     isBootstrapping,

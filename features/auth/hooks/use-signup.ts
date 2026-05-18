@@ -4,74 +4,33 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase-client';
 import { useTranslation } from '@/lib/i18nContext';
+import { SignupValues } from '../schemas/signup.schema';
 
 export function useSignup() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<{ code?: string; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handlePhoneChange = (val: string) => {
-    setFormData((prev) => ({ ...prev, phone: val }));
-  };
-
-  const isPasswordMatch =
-    formData.password === formData.confirmPassword && formData.password.length > 0;
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const isEmailValid = emailRegex.test(formData.email.trim());
-  const showEmailError = formData.email.length > 0 && !isEmailValid;
-
-  const signup = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const signup = async (data: SignupValues) => {
     setError(null);
-
-    const trimmedEmail = formData.email.trim();
-
-    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
-      setError({ message: t('val.req_email') });
-      return;
-    }
-
-    if (!agreed) {
-      setError({ message: 'Please agree to the Terms & Conditions.' });
-      return;
-    }
-
-    if (!isPasswordMatch) {
-      setError({ message: t('auth.pass_mismatch') });
-      return;
-    }
-
     setLoading(true);
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, formData.password);
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
       await updateProfile(user, {
-        displayName: `${formData.firstName} ${formData.lastName}`,
+        displayName: `${data.firstName} ${data.lastName}`,
       });
 
       if (db) {
         await setDoc(doc(db, 'users', user.uid), {
           id: user.uid,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: trimmedEmail,
-          phone: formData.phone,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone || '',
           role: 'Customer',
           status: 'Active',
           createdAt: serverTimestamp(),
@@ -96,15 +55,8 @@ export function useSignup() {
   };
 
   return {
-    formData,
-    agreed,
-    setAgreed,
     error,
     loading,
-    handleChange,
-    handlePhoneChange,
-    isPasswordMatch,
-    showEmailError,
     signup,
   };
 }

@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 import { Lock, Mail, ShieldCheck, ArrowRight, Loader2, Zap } from 'lucide-react';
 import SafeImage from '@/components/ui/safe-image';
 import { useAdminLogin } from '../hooks/use-admin-login';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { adminLoginSchema, AdminLoginValues } from '../schemas/admin-login.schema';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
 export default function AdminLoginPage() {
   const {
-    email,
-    setEmail,
-    password,
-    setPassword,
     error,
     isLoading,
     isBootstrapping,
@@ -17,6 +17,14 @@ export default function AdminLoginPage() {
     handleLogin,
     handleBootstrap,
   } = useAdminLogin();
+
+  const form = useForm<AdminLoginValues>({
+    resolver: zodResolver(adminLoginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#020617] relative overflow-hidden">
@@ -42,36 +50,52 @@ export default function AdminLoginPage() {
             <p className="text-slate-400 text-sm mt-1">Sign in to dashboard</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs text-slate-300 font-medium ml-1">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                  placeholder="name@raiyansoft.com"
-                  required
-                />
-              </div>
-            </div>
+          <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+            <Controller
+              name="email"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Email Address</FieldLabel>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <input
+                      {...field}
+                      type="email"
+                      aria-invalid={fieldState.invalid}
+                      className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                      placeholder="name@raiyansoft.com"
+                    />
+                  </div>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
 
-            <div className="space-y-1">
-              <label className="text-xs text-slate-300 font-medium ml-1">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                  placeholder="••••••"
-                  required
-                />
-              </div>
-            </div>
+            <Controller
+              name="password"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Password</FieldLabel>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <input
+                      {...field}
+                      type="password"
+                      aria-invalid={fieldState.invalid}
+                      className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                      placeholder="••••••"
+                    />
+                  </div>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
 
             {error ? (
               <motion.div
@@ -115,7 +139,13 @@ export default function AdminLoginPage() {
 
             <button
               type="button"
-              onClick={handleBootstrap}
+              onClick={async () => {
+                const values = await handleBootstrap();
+                if (values) {
+                  form.setValue('email', values.email);
+                  form.setValue('password', values.password);
+                }
+              }}
               disabled={isBootstrapping}
               className="text-[10px] text-slate-700 hover:text-slate-500 transition-colors flex items-center justify-center gap-1 mx-auto"
             >
