@@ -22,7 +22,7 @@ export const FieldLabel = React.forwardRef<HTMLLabelElement, FieldLabelProps>(
   ({ children, className = '', ...props }, ref) => (
     <label
       ref={ref}
-      className={`text-xs text-slate-400 font-medium ms-1 block ${className}`}
+      className={`text-xs text-slate-400 font-medium ms-1 block leading-5 ${className}`}
       {...props}
     >
       {children}
@@ -46,7 +46,7 @@ export const FieldError = React.forwardRef<HTMLParagraphElement, FieldErrorProps
     return (
       <p
         ref={ref}
-        className={`text-[10px] text-red-400 ms-1 mt-1 font-medium ${className}`}
+        className={`text-[10px] text-red-400 ms-1 mt-0.5 font-medium ${className}`}
         {...props}
       >
         {message}
@@ -64,7 +64,7 @@ export const FieldDescription = React.forwardRef<HTMLParagraphElement, FieldDesc
   ({ children, className = '', ...props }, ref) => (
     <p
       ref={ref}
-      className={`text-xs text-slate-500 ms-1 mt-1 ${className}`}
+      className={`text-xs text-slate-500 ms-1 mt-0.5 ${className}`}
       {...props}
     >
       {children}
@@ -79,7 +79,7 @@ interface FieldGroupProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const FieldGroup = React.forwardRef<HTMLDivElement, FieldGroupProps>(
   ({ children, className = '', ...props }, ref) => (
-    <div ref={ref} className={`space-y-4 ${className}`} {...props}>
+    <div ref={ref} className={`space-y-5 ${className}`} {...props}>
       {children}
     </div>
   )

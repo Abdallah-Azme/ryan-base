@@ -4,6 +4,7 @@ import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, update
 import { db, auth } from './firebase-client';
 import { sanitizeForFirestore } from './firestoreSanitize';
 import { userProjectsStore } from './userProjectsStore';
+import { createAuditLogSafe } from './auditLogStore';
 
 export interface Lead {
   id: string;
@@ -15,6 +16,19 @@ export interface Lead {
   status: 'new' | 'reviewing' | 'approved' | 'rejected' | 'claimed' | 'deleted';
   createdAt: number;
   rejectReason?: string;
+  assignedTo?: string;
+  reviewNotes?: string;
+  approvedAt?: number;
+  approvedBy?: string;
+  rejectedAt?: number;
+  rejectedBy?: string;
+  claimTokenExpiresAt?: number;
+  timeline?: {
+    action: string;
+    reason?: string;
+    createdAt: number;
+    createdByName?: string;
+  }[];
   deletedAt?: number;
   deletedBy?: string;
   deleteReason?: string;
@@ -66,9 +80,52 @@ class LeadStore {
 
   async updateLeadStatus(id: string, status: Lead['status'], reason?: string) {
     if (!db) return;
-    const update: any = { status };
+    const user = auth.currentUser;
+    const now = Date.now();
+    const currentLead = this.leads.find((lead) => lead.id === id);
+    const timeline = [
+      ...(currentLead?.timeline || []),
+      {
+        action: `status.${status}`,
+        reason: reason || '',
+        createdAt: now,
+        createdByName: user?.displayName || user?.email || 'Admin',
+      },
+    ];
+
+    const update: any = { status, timeline, updatedAt: serverTimestamp() };
     if (reason) update.rejectReason = reason;
+    if (status === 'approved') {
+      update.approvedAt = now;
+      update.approvedBy = user?.uid || 'admin_unknown';
+    }
+    if (status === 'rejected') {
+      update.rejectedAt = now;
+      update.rejectedBy = user?.uid || 'admin_unknown';
+    }
     await updateDoc(doc(db, 'leads', id), update);
+    await createAuditLogSafe({
+      entityType: 'lead',
+      entityId: id,
+      action: `lead.${status}`,
+      reason,
+      oldValue: { status: currentLead?.status },
+      newValue: update,
+    });
+  }
+
+  async updateLeadReview(id: string, updates: Pick<Lead, 'assignedTo' | 'reviewNotes'>) {
+    if (!db) return;
+    await updateDoc(doc(db, 'leads', id), {
+      ...sanitizeForFirestore(updates),
+      updatedAt: serverTimestamp(),
+    });
+    await createAuditLogSafe({
+      entityType: 'lead',
+      entityId: id,
+      action: 'lead.review_updated',
+      newValue: updates,
+    });
   }
 
   async generateClaimToken(leadId: string): Promise<string> {
@@ -83,6 +140,17 @@ class LeadStore {
       expiresAt,
       used: false,
       createdAt: serverTimestamp()
+    });
+
+    await updateDoc(doc(db, 'leads', leadId), {
+      claimTokenExpiresAt: expiresAt,
+      updatedAt: serverTimestamp(),
+    });
+    await createAuditLogSafe({
+      entityType: 'lead',
+      entityId: leadId,
+      action: 'lead.claim_link_generated',
+      newValue: { expiresAt },
     });
 
     return token;
@@ -160,6 +228,11 @@ class LeadStore {
       deletedAt: serverTimestamp(),
       deletedBy: user ? user.uid : 'admin_unknown',
       deleteReason: ''
+    });
+    await createAuditLogSafe({
+      entityType: 'lead',
+      entityId: leadId,
+      action: 'lead.deleted',
     });
   }
 }

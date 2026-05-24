@@ -18,8 +18,8 @@ export default function AdminProtectedLayout({ children }: { children: React.Rea
       }
 
       try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists() && userDoc.data().role === 'admin') {
+        const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+        if (adminDoc.exists() && adminDoc.data().status === 'Active') {
           setIsChecking(false);
         } else {
           router.replace('/home');

@@ -20,6 +20,7 @@ export interface AppointmentSettings {
 
 export interface Appointment {
   id: string;
+  userId?: string | null;
   userEmail?: string;
   guestName?: string;
   guestEmail?: string;
@@ -29,10 +30,18 @@ export interface Appointment {
   endAt: Timestamp;
   dateKey: string;
   time: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: 'pending' | 'confirmed' | 'accepted' | 'rejected' | 'cancelled' | 'completed';
   meetingType: 'online' | 'in_person';
   topic: string;
   notes?: string;
+  adminNotes?: string;
+  rejectReason?: string;
+  statusHistory?: {
+    status: string;
+    reason?: string;
+    createdAt: number;
+    createdByName?: string;
+  }[];
   createdAt: any;
 }
 

@@ -11,10 +11,20 @@ export default function AdminAppointmentsPage() {
     setActiveTab,
     settings,
     setSettings,
-    bookings,
+    filteredBookings,
+    bookingStatusFilter,
+    setBookingStatusFilter,
+    bookingSearch,
+    setBookingSearch,
     loading,
     savingId,
     error,
+    selectedBooking,
+    rejectReason,
+    setRejectReason,
+    adminNotes,
+    setAdminNotes,
+    setSelectedBooking,
     handleSaveSettings,
     handleUpdateAvailability,
     handleAddRange,
@@ -22,6 +32,10 @@ export default function AdminAppointmentsPage() {
     handleChangeRange,
     handleCancelBooking,
     handleCompleteBooking,
+    handleAcceptBooking,
+    handleRejectBooking,
+    handleSaveAdminNotes,
+    openBooking,
   } = useAdminAppointments();
 
   if (!settings) {
@@ -70,7 +84,21 @@ export default function AdminAppointmentsPage() {
             ) : null}
 
             <AdminBookingsTab
-              bookings={bookings}
+              bookings={filteredBookings}
+              statusFilter={bookingStatusFilter}
+              searchQuery={bookingSearch}
+              onStatusFilterChange={setBookingStatusFilter}
+              onSearchQueryChange={setBookingSearch}
+              selectedBooking={selectedBooking}
+              rejectReason={rejectReason}
+              adminNotes={adminNotes}
+              onSetRejectReason={setRejectReason}
+              onSetAdminNotes={setAdminNotes}
+              onOpenBooking={openBooking}
+              onCloseBooking={() => setSelectedBooking(null)}
+              onAcceptBooking={handleAcceptBooking}
+              onRejectBooking={handleRejectBooking}
+              onSaveAdminNotes={handleSaveAdminNotes}
               onCompleteBooking={handleCompleteBooking}
               onCancelBooking={handleCancelBooking}
             />

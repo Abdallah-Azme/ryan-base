@@ -17,11 +17,13 @@ import {
   ChevronDown,
   Calendar,
   Inbox,
+  ListChecks,
 } from 'lucide-react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase-client';
 import { useAdminChatNotifications } from '@/lib/adminChatStore';
+import { hasPermission } from '@/lib/permissions';
 import SafeImage from '../ui/safe-image';
 import Avatar from '../ui/avatar';
 
@@ -33,6 +35,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(auth.currentUser);
+  const [currentPermissions, setCurrentPermissions] = useState<string[]>(['*']);
   const [upcomingApptsCount, setUpcomingApptsCount] = useState(0);
 
   const router = useRouter();
@@ -43,6 +46,28 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      if (user && db) {
+        Promise.all([
+          getDoc(doc(db, 'users', user.uid)).catch(() => null),
+          getDoc(doc(db, 'admins', user.uid)).catch(() => null),
+        ])
+          .then(([userSnap, adminSnap]) => {
+            const userData = userSnap?.data();
+            const adminData = adminSnap?.data();
+            if (userData?.role === 'admin' || adminData?.role === 'super_admin') {
+              setCurrentPermissions(['*']);
+              return;
+            }
+            const adminPermissions = adminData?.permissions
+              ? Object.keys(adminData.permissions).filter((key) => adminData.permissions[key])
+              : [];
+            const userPermissions = Array.isArray(userData?.permissions) ? userData.permissions : [];
+            setCurrentPermissions([...new Set([...adminPermissions, ...userPermissions])]);
+          })
+          .catch(() => setCurrentPermissions([]));
+      } else {
+        setCurrentPermissions([]);
+      }
     });
 
     const handleClickOutside = (event: MouseEvent) => {
@@ -88,15 +113,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   const navItems = [
-    { id: 'leads', label: 'Leads', icon: Inbox, path: '/admin/leads', badge: 0 },
-    { id: 'projects', label: 'Portfolio', icon: FolderKanban, path: '/admin/projects', badge: 0 },
-    { id: 'user-projects', label: 'User Projects', icon: LayoutGrid, path: '/admin/user-projects', badge: 0 },
+    { id: 'leads', label: 'Leads', icon: Inbox, path: '/admin/leads', badge: 0, permission: 'leads.view' },
+    { id: 'project-types', label: 'Project Types', icon: Briefcase, path: '/admin/project-types', badge: 0, permission: 'project_types.manage' },
+    { id: 'project-questions', label: 'Project Questions', icon: ListChecks, path: '/admin/project-questions', badge: 0, permission: 'lead_questions.manage' },
+    { id: 'projects', label: 'Portfolio', icon: FolderKanban, path: '/admin/projects', badge: 0, permission: 'portfolio.manage' },
+    { id: 'user-projects', label: 'User Projects', icon: LayoutGrid, path: '/admin/user-projects', badge: 0, permission: 'projects.view' },
     {
       id: 'live-chat',
       label: 'Live Chat',
       icon: MessageSquareText,
       path: '/admin/live-chat',
       badge: totalUnread,
+      permission: 'chat.manage',
     },
     {
       id: 'appointments',
@@ -104,11 +132,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: Calendar,
       path: '/admin/appointments',
       badge: upcomingApptsCount,
+      permission: 'appointments.view',
     },
-    { id: 'users', label: 'Users', icon: Users, path: '/admin/users', badge: 0 },
-    { id: 'employees', label: 'Employees', icon: Briefcase, path: '/admin/employees', badge: 0 },
-    { id: 'roles', label: 'Roles', icon: Shield, path: '/admin/roles', badge: 0 },
-  ];
+    { id: 'users', label: 'Users', icon: Users, path: '/admin/users', badge: 0, permission: 'users.view' },
+    { id: 'employees', label: 'Employees', icon: Briefcase, path: '/admin/employees', badge: 0, permission: 'employees.manage' },
+    { id: 'roles', label: 'Roles', icon: Shield, path: '/admin/roles', badge: 0, permission: 'roles.manage' },
+  ].filter((item) => hasPermission(currentPermissions, item.permission));
 
   function SidebarContent() {
     return (

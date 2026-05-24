@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, Timestamp, addDoc, serverTimestamp } from 'firebase/firestore';
 import { appointmentStore, AppointmentSettings, Appointment } from '@/lib/appointmentStore';
-import { db } from '@/lib/firebase-client';
+import { auth, db } from '@/lib/firebase-client';
+import { createAuditLogSafe } from '@/lib/auditLogStore';
+import { createServiceNotificationSafe } from '@/lib/serviceNotifications';
 
 export const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -12,6 +14,11 @@ export function useAdminAppointments() {
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Appointment | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [adminNotes, setAdminNotes] = useState('');
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<string>('all');
+  const [bookingSearch, setBookingSearch] = useState('');
 
   useEffect(() => {
     const seedSampleBookingV3 = async () => {
@@ -97,6 +104,7 @@ export function useAdminAppointments() {
             );
 
             setBookings(data);
+            setSelectedBooking((current) => (current ? data.find((booking) => booking.id === current.id) || null : null));
             setError(null);
           },
           (err) => {
@@ -135,6 +143,24 @@ export function useAdminAppointments() {
       setLoading(false);
     }
   };
+
+  const filteredBookings = bookings.filter((booking) => {
+    const matchesStatus = bookingStatusFilter === 'all' || booking.status === bookingStatusFilter;
+    const query = bookingSearch.trim().toLowerCase();
+    if (!query) return matchesStatus;
+    const haystack = [
+      booking.guestName,
+      booking.guestEmail,
+      booking.userEmail,
+      booking.guestPhone,
+      booking.topic,
+      booking.notes,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return matchesStatus && haystack.includes(query);
+  });
 
   const handleUpdateAvailability = async (dayIndex: number, enabled: boolean) => {
     if (!settings) return;
@@ -186,12 +212,111 @@ export function useAdminAppointments() {
 
   const handleCancelBooking = async (id: string) => {
     if (window.confirm('Cancel this appointment?')) {
-      await updateDoc(doc(db, 'appointment_bookings', id), { status: 'cancelled' });
+      await updateBookingStatus(id, 'cancelled');
     }
   };
 
   const handleCompleteBooking = async (id: string) => {
-    await updateDoc(doc(db, 'appointment_bookings', id), { status: 'completed' });
+    await updateBookingStatus(id, 'completed');
+  };
+
+  const getAdminName = () => auth.currentUser?.displayName || auth.currentUser?.email || 'Admin';
+
+  const updateBookingStatus = async (
+    id: string,
+    status: Appointment['status'],
+    reason?: string,
+    notes?: string
+  ) => {
+    const booking = bookings.find((item) => item.id === id);
+    if (!booking) return;
+
+    const historyEntry = {
+      status,
+      reason: reason || '',
+      createdAt: Date.now(),
+      createdByName: getAdminName(),
+    };
+
+    const statusHistory = [...(booking.statusHistory || []), historyEntry];
+    const updates: Partial<Appointment> = {
+      status,
+      statusHistory,
+      adminNotes: notes ?? booking.adminNotes ?? '',
+    };
+
+    if (status === 'rejected') updates.rejectReason = reason || '';
+
+    await updateDoc(doc(db, 'appointment_bookings', id), {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    });
+
+    await createAuditLogSafe({
+      entityType: 'appointment',
+      entityId: id,
+      action: `appointment.${status}`,
+      reason,
+      oldValue: { status: booking.status },
+      newValue: updates,
+    });
+
+    if (booking.userId && ['accepted', 'confirmed', 'rejected', 'cancelled', 'completed'].includes(status)) {
+      const title =
+        status === 'rejected'
+          ? 'Appointment rejected'
+          : status === 'cancelled'
+          ? 'Appointment cancelled'
+          : status === 'completed'
+          ? 'Appointment completed'
+          : 'Appointment accepted';
+      const message =
+        status === 'rejected'
+          ? `Your appointment about ${booking.topic} was rejected. ${reason || ''}`.trim()
+          : `Your appointment about ${booking.topic} is now ${status}.`;
+      await createServiceNotificationSafe({
+        userId: booking.userId,
+        type: status === 'rejected' || status === 'cancelled' ? 'warning' : 'success',
+        title,
+        message,
+        deepLink: '/appointments',
+      });
+    }
+  };
+
+  const handleAcceptBooking = async (id: string) => {
+    await updateBookingStatus(id, 'accepted', undefined, adminNotes);
+  };
+
+  const handleRejectBooking = async (id: string) => {
+    if (!rejectReason.trim()) {
+      setError('Add a rejection reason before rejecting this appointment.');
+      return;
+    }
+    await updateBookingStatus(id, 'rejected', rejectReason.trim(), adminNotes);
+    setRejectReason('');
+  };
+
+  const handleSaveAdminNotes = async (id: string) => {
+    const booking = bookings.find((item) => item.id === id);
+    if (!booking) return;
+    await updateDoc(doc(db, 'appointment_bookings', id), {
+      adminNotes,
+      updatedAt: serverTimestamp(),
+    });
+    await createAuditLogSafe({
+      entityType: 'appointment',
+      entityId: id,
+      action: 'appointment.admin_notes_updated',
+      oldValue: { adminNotes: booking.adminNotes || '' },
+      newValue: { adminNotes },
+    });
+  };
+
+  const openBooking = (booking: Appointment) => {
+    setSelectedBooking(booking);
+    setAdminNotes(booking.adminNotes || '');
+    setRejectReason(booking.rejectReason || '');
   };
 
   return {
@@ -200,9 +325,20 @@ export function useAdminAppointments() {
     settings,
     setSettings,
     bookings,
+    filteredBookings,
+    bookingStatusFilter,
+    setBookingStatusFilter,
+    bookingSearch,
+    setBookingSearch,
     loading,
     savingId,
     error,
+    selectedBooking,
+    rejectReason,
+    setRejectReason,
+    adminNotes,
+    setAdminNotes,
+    setSelectedBooking,
     handleSaveSettings,
     handleUpdateAvailability,
     handleAddRange,
@@ -210,5 +346,9 @@ export function useAdminAppointments() {
     handleChangeRange,
     handleCancelBooking,
     handleCompleteBooking,
+    handleAcceptBooking,
+    handleRejectBooking,
+    handleSaveAdminNotes,
+    openBooking,
   };
 }

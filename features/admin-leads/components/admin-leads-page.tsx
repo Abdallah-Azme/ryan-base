@@ -9,6 +9,7 @@ export default function AdminLeadsPage() {
   const {
     selectedLead,
     setSelectedLead,
+    openLead,
     statusFilter,
     setStatusFilter,
     searchQuery,
@@ -16,10 +17,17 @@ export default function AdminLeadsPage() {
     claimLink,
     setClaimLink,
     isGeneratingLink,
+    rejectReason,
+    setRejectReason,
+    assignedTo,
+    setAssignedTo,
+    reviewNotes,
+    setReviewNotes,
     language,
     filteredLeads,
     handleGenerateLink,
     handleUpdateStatus,
+    handleSaveReview,
     handleDeleteLead,
     toWhatsAppDigits,
   } = useAdminLeads();
@@ -42,7 +50,7 @@ export default function AdminLeadsPage() {
 
       <LeadsTable
         filteredLeads={filteredLeads}
-        onSelectLead={setSelectedLead}
+        onSelectLead={openLead}
         toWhatsAppDigits={toWhatsAppDigits}
       />
 
@@ -61,6 +69,13 @@ export default function AdminLeadsPage() {
             claimLink={claimLink}
             isGeneratingLink={isGeneratingLink}
             onGenerateLink={handleGenerateLink}
+            rejectReason={rejectReason}
+            onRejectReasonChange={setRejectReason}
+            assignedTo={assignedTo}
+            onAssignedToChange={setAssignedTo}
+            reviewNotes={reviewNotes}
+            onReviewNotesChange={setReviewNotes}
+            onSaveReview={handleSaveReview}
           />
         ) : null}
       </AnimatePresence>

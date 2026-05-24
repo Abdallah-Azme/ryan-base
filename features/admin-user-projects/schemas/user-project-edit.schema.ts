@@ -5,7 +5,7 @@ export const userProjectEditSchema = z.object({
   description: z.string().optional(),
   estimatedPrice: z.union([z.string(), z.number()]).optional(),
   estimatedDuration: z.union([z.string(), z.number()]).optional(),
-  status: z.enum(['pricing', 'design', 'development', 'publishing', 'support', 'cancelled']),
+  status: z.enum(['pricing', 'design', 'development', 'publishing', 'support', 'completed', 'cancelled']),
   projectUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
   industry: z.string().optional(),
   industryOther: z.string().optional(),

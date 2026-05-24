@@ -25,6 +25,8 @@ export default function WizardIndustryStep({
       <div className="grid grid-cols-2 gap-3">
         {industries.map((ind) => {
           const isSelected = selectedIndustry === ind;
+          const translated = t(`industry.${ind}`);
+          const label = translated === `industry.${ind}` ? ind : translated;
           return (
             <button
               type="button"
@@ -36,7 +38,7 @@ export default function WizardIndustryStep({
                   : 'bg-slate-800 border-white/10 text-slate-400 hover:bg-slate-700'
               }`}
             >
-              <span className="text-sm font-semibold leading-tight">{t(`industry.${ind}`)}</span>
+              <span className="text-sm font-semibold leading-tight">{label}</span>
               {isSelected ? (
                 <div className="self-end bg-white/20 rounded-full p-1">
                   <Check size={12} />

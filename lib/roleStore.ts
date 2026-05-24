@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase-client';
+import { PERMISSIONS_LIST } from './permissions';
 
 export interface Role {
   id: string;
@@ -11,13 +12,7 @@ export interface Role {
   createdAt: number;
 }
 
-export const PERMISSIONS_LIST = [
-  'Manage Projects',
-  'Manage Users',
-  'Manage Admins',
-  'Manage Roles',
-  'View Analytics'
-];
+export { PERMISSIONS_LIST };
 
 class RoleStore {
   private roles: Role[] = [];

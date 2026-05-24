@@ -49,10 +49,15 @@ export function useAdminProjects() {
   };
 
   const handleSubmit = (data: ProjectValues) => {
+    const projectData = {
+      ...data,
+      logoUrl: data.logoUrl || '',
+    };
+
     if (editingProject) {
-      projectStore.updateProject(editingProject.id, data);
+      projectStore.updateProject(editingProject.id, projectData);
     } else {
-      projectStore.addProject(data);
+      projectStore.addProject(projectData);
     }
     handleCloseModal();
   };

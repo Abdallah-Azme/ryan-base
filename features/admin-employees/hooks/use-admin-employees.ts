@@ -5,6 +5,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAdmins, adminStore, AdminUser } from '@/lib/adminStore';
 import { useRoles } from '@/lib/roleStore';
 import { firebaseConfig, db } from '@/lib/firebase-client';
+import { EmployeeValues } from '../schemas/employee.schema';
 
 export function useAdminEmployees() {
   const { admins } = useAdmins();
@@ -80,32 +81,30 @@ export function useAdminEmployees() {
     setFormData((prev) => ({ ...prev, password: pass }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: EmployeeValues) => {
     setIsSubmitting(true);
 
     try {
-      const selectedRole = roles.find((r) => r.id === formData.roleId);
+      const selectedRole = roles.find((r) => r.id === data.roleId);
       const permissionsMap: Record<string, boolean> = {};
       if (selectedRole) {
         selectedRole.permissions.forEach((p) => {
-          const key = p.toLowerCase().replace('manage ', '').replace('view ', '').replace(' ', '_');
-          permissionsMap[key] = true;
+          permissionsMap[p] = true;
         });
       }
 
       if (editingAdmin) {
         await adminStore.updateAdmin(editingAdmin.id, {
-          name: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.phone,
-          role: formData.roleId,
-          status: formData.status,
+          name: `${data.firstName} ${data.lastName}`,
+          email: data.email,
+          phone: data.phone || '',
+          role: data.roleId,
+          status: data.status,
           permissions: permissionsMap,
         });
         setIsModalOpen(false);
       } else {
-        if (formData.password.length < 8) {
+        if (!data.password || data.password.length < 8) {
           alert('Password must be at least 8 characters');
           setIsSubmitting(false);
           return;
@@ -116,24 +115,24 @@ export function useAdminEmployees() {
         const secondaryAuth = getAuth(secondaryApp);
 
         try {
-          const authEmail = `admin_${formData.email}`;
+          const authEmail = `admin_${data.email}`;
 
-          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, authEmail, formData.password);
+          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, authEmail, data.password);
           const newUser = userCredential.user;
 
           await updateProfile(newUser, {
-            displayName: `${formData.firstName} ${formData.lastName}`,
+            displayName: `${data.firstName} ${data.lastName}`,
           });
 
           const adminRef = doc(db, 'admins', newUser.uid);
 
           await setDoc(adminRef, {
             id: newUser.uid,
-            name: `${formData.firstName} ${formData.lastName}`,
-            email: formData.email,
-            phone: formData.phone || '',
-            role: formData.roleId,
-            status: formData.status,
+            name: `${data.firstName} ${data.lastName}`,
+            email: data.email,
+            phone: data.phone || '',
+            role: data.roleId,
+            status: data.status,
             permissions: permissionsMap,
             createdAt: serverTimestamp(),
             lastLoginAt: null,
@@ -142,7 +141,7 @@ export function useAdminEmployees() {
           await signOut(secondaryAuth);
           await deleteApp(secondaryApp);
 
-          setCreatedPassword(formData.password);
+          setCreatedPassword(data.password);
         } catch (innerError: any) {
           await deleteApp(secondaryApp);
           throw innerError;

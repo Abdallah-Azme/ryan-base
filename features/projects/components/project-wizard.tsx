@@ -46,6 +46,7 @@ export default function ProjectWizard({
     setShowCustomColor,
     errors,
     isLoading,
+    projectTypes,
     nextStep,
     prevStep,
     handleCreate,
@@ -99,7 +100,7 @@ export default function ProjectWizard({
       case 4:
         return (
           <WizardIndustryStep
-            industries={INDUSTRIES}
+            industries={projectTypes}
             selectedIndustry={formData.industry}
             industryOther={formData.industryOther}
             t={t}
@@ -189,33 +190,26 @@ export default function ProjectWizard({
             <h2 className="text-2xl font-bold text-white mb-2">{t('auth.create_account')}</h2>
             <p className="text-slate-400 text-sm mb-6">{t('auth.signup_subtitle')}</p>
             <SignupForm
-              formData={{
+              defaultValues={{
                 firstName: formData.signupFirstName,
                 lastName: formData.signupLastName,
                 phone: formData.signupPhone,
                 email: formData.signupEmail,
                 password: formData.signupPassword,
                 confirmPassword: formData.signupConfirmPassword,
+                agreed: true,
               }}
-              handleChange={(e) => {
-                const { name, value } = e.target;
-                const mappedName = `signup${name.charAt(0).toUpperCase() + name.slice(1)}`;
-                setFormData((prev) => ({ ...prev, [mappedName]: value }));
-              }}
-              handlePhoneChange={(val) => setFormData((prev) => ({ ...prev, signupPhone: val }))}
-              agreed={true}
-              setAgreed={() => {}}
               loading={false}
-              showEmailError={
-                formData.signupEmail.length > 0 &&
-                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.signupEmail.trim())
-              }
-              isPasswordMatch={
-                formData.signupPassword === formData.signupConfirmPassword &&
-                formData.signupPassword.length > 0
-              }
-              onSubmit={(e) => {
-                e.preventDefault();
+              onSubmit={(data) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  signupFirstName: data.firstName,
+                  signupLastName: data.lastName,
+                  signupPhone: data.phone || '',
+                  signupEmail: data.email,
+                  signupPassword: data.password,
+                  signupConfirmPassword: data.confirmPassword,
+                }));
                 nextStep();
               }}
             />

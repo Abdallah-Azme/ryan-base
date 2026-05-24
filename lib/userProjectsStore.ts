@@ -15,7 +15,87 @@ import { db, auth } from './firebase-client';
 import { onAuthStateChanged } from 'firebase/auth';
 import { sanitizeForFirestore } from './firestoreSanitize';
 
-export type ProjectStatus = "pricing" | "design" | "development" | "publishing" | "support" | "cancelled";
+export type ProjectStatus =
+  | "pricing"
+  | "design"
+  | "development"
+  | "publishing"
+  | "support"
+  | "completed"
+  | "cancelled";
+
+export type ProjectStageStatus = "planned" | "active" | "completed" | "blocked";
+
+export interface ProjectStage {
+  id: string;
+  title: string;
+  description?: string;
+  assignedTo?: string;
+  estimatedDays?: number | null;
+  order: number;
+  progress: number;
+  status: ProjectStageStatus;
+  createdAt: number;
+  updatedAt: number;
+  startedAt?: number | null;
+  completedAt?: number | null;
+}
+
+export interface ProjectProgressUpdate {
+  id: string;
+  stageId: string;
+  stageTitle: string;
+  previousProgress: number;
+  nextProgress: number;
+  note: string;
+  createdAt: number;
+  createdByName?: string;
+}
+
+export interface ProjectAttachment {
+  id: string;
+  stageId: string;
+  title: string;
+  description: string;
+  reason: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  storagePath: string;
+  url: string;
+  createdAt: number;
+  createdByName?: string;
+}
+
+export interface ProjectInternalNote {
+  id: string;
+  stageId: string;
+  text: string;
+  adminOnly: true;
+  createdAt: number;
+  createdByName?: string;
+}
+
+export interface ProjectWeeklyReport {
+  id: string;
+  weekStart: number;
+  weekEnd: number;
+  content: string;
+  status: "draft" | "sent";
+  sourceUpdateIds: string[];
+  clientVisible: boolean;
+  createdAt: number;
+  updatedAt: number;
+  createdByName?: string;
+  sentAt?: number | null;
+}
+
+export interface ProjectFinalReport {
+  content: string;
+  generatedAt: number;
+  approvedAt?: number | null;
+  approvedByName?: string;
+}
 
 export interface UserProject {
   id: string;
@@ -33,6 +113,13 @@ export interface UserProject {
   version?: string; 
   iconBg?: string; 
   brandColor?: string;
+  stages?: ProjectStage[];
+  progressUpdates?: ProjectProgressUpdate[];
+  weeklyReports?: ProjectWeeklyReport[];
+  attachments?: ProjectAttachment[];
+  internalNotes?: ProjectInternalNote[];
+  finalReport?: ProjectFinalReport | null;
+  completedAt?: number | null;
   
   // Wizard Fields
   platforms?: string[];

@@ -11,7 +11,7 @@ export default function ForgotPasswordLink({ onClick, isLoading = false }: Forgo
   const { t } = useTranslation();
 
   return (
-    <div className="flex justify-end pt-1">
+    <div className="flex justify-end pt-3 pb-1">
       <button
         type="button"
         onClick={onClick}

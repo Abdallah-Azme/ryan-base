@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase-client';
+import { auth, db } from '@/lib/firebase-client';
 import { useTranslation } from '@/lib/i18nContext';
 import { userProjectsStore } from '@/lib/userProjectsStore';
 import { leadStore } from '@/lib/leadStore';
@@ -75,6 +76,25 @@ export function useProjectWizard({
   const [showCustomColor, setShowCustomColor] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [projectTypes, setProjectTypes] = useState<string[]>(INDUSTRIES);
+
+  useEffect(() => {
+    if (!db) return;
+    const q = query(collection(db, 'project_types'), orderBy('order', 'asc'));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const activeTypes = snapshot.docs
+          .map((snap) => snap.data())
+          .filter((type) => type.active !== false)
+          .map((type) => type.name)
+          .filter(Boolean);
+        setProjectTypes(activeTypes.length ? [...activeTypes, 'Other'] : INDUSTRIES);
+      },
+      () => setProjectTypes(INDUSTRIES)
+    );
+    return () => unsubscribe();
+  }, []);
 
   const generateAndSetDescription = () => {
     const parts: string[] = [];
@@ -328,6 +348,7 @@ export function useProjectWizard({
     setShowCustomColor,
     errors,
     isLoading,
+    projectTypes,
     nextStep,
     prevStep,
     handleCreate,

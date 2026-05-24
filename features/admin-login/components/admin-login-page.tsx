@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
             <p className="text-slate-400 text-sm mt-1">Sign in to dashboard</p>
           </div>
 
-          <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-6">
             <Controller
               name="email"
               control={form.control}
@@ -121,7 +121,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary text-white font-semibold py-3.5 rounded-xl shadow-[0_0_20px_rgba(29,183,240,0.3)] hover:shadow-[0_0_25px_rgba(29,183,240,0.5)] transition-all duration-300 mt-2 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed group"
+              className="w-full bg-primary text-white font-semibold py-3.5 rounded-xl shadow-[0_0_20px_rgba(29,183,240,0.3)] hover:shadow-[0_0_25px_rgba(29,183,240,0.5)] transition-all duration-300 mt-1 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed group"
             >
               {isLoading ? (
                 <Loader2 size={20} className="animate-spin" />

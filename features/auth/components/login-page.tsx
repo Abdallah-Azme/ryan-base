@@ -31,10 +31,10 @@ export default function LoginPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="flex flex-col h-full p-6 pt-8 relative overflow-y-auto no-scrollbar"
+      className="min-h-full p-6 pt-8 pb-10 relative overflow-y-auto no-scrollbar"
     >
-      <div className="w-full shrink-0">
-        <div className="flex justify-center mb-8">
+      <div className="w-full">
+        <div className="flex justify-center mb-10">
           <SafeImage
             src="https://raiyansoft.com/wp-content/uploads/2024/05/cropped-App-Icon-1.png"
             alt="Logo"
@@ -42,7 +42,7 @@ export default function LoginPage() {
           />
         </div>
 
-        <div className="mb-8">
+        <div className="mb-10">
           <h1 className="text-3xl font-bold text-white mb-2">{t('auth.welcome')}</h1>
           <p className="text-slate-400 text-sm">{t('auth.signin_subtitle')}</p>
         </div>
@@ -79,14 +79,14 @@ export default function LoginPage() {
         <Button
           variant="outline"
           onClick={handleGuestLogin}
-          className="w-full mt-4 flex items-center justify-center gap-2"
+          className="w-full mt-7 flex items-center justify-center gap-2"
         >
           <span>{t('auth.continue_guest')}</span>
           <ArrowRight size={16} className={dir === 'rtl' ? 'rotate-180' : ''} />
         </Button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-end space-y-8 pb-6 min-h-[100px]">
+      <div className="flex flex-col items-center gap-6 pt-10">
         <button
           type="button"
           onClick={() => router.push('/signup')}

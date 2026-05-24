@@ -15,7 +15,7 @@ export default function Input({
   ...props
 }: InputProps) {
   return (
-    <div className="space-y-1 w-full">
+    <div className="space-y-2 w-full">
       {label ? (
         <label className="text-xs text-slate-400 ms-1 block font-medium">
           {label}
@@ -40,7 +40,7 @@ export default function Input({
         />
       </div>
       {error ? (
-        <p className="text-[10px] text-red-400 ms-1 mt-1 font-medium">{error}</p>
+        <p className="text-[10px] text-red-400 ms-1 mt-0.5 font-medium">{error}</p>
       ) : null}
     </div>
   );

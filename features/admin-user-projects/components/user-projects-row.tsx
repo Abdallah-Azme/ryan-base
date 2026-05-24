@@ -1,5 +1,6 @@
 import React from 'react';
-import { LayoutGrid, Link as LinkIcon, Edit2 } from 'lucide-react';
+import Link from 'next/link';
+import { Eye, LayoutGrid, Link as LinkIcon, Edit2 } from 'lucide-react';
 import Avatar from '@/components/ui/avatar';
 import { UserProject } from '@/lib/userProjectsStore';
 
@@ -10,11 +11,15 @@ interface UserProjectsRowProps {
 }
 
 export default function UserProjectsRow({ project, onEdit, formatDate }: UserProjectsRowProps) {
+  const detailHref = project.ownerId
+    ? `/admin/user-projects/${encodeURIComponent(project.ownerId)}/${encodeURIComponent(project.id)}`
+    : '/admin/user-projects';
+
   return (
     <>
       <tr className="hidden md:table-row hover:bg-white/[0.02] transition-colors group">
         <td className="p-5">
-          <div className="flex items-center gap-3">
+          <Link href={detailHref} className="flex items-center gap-3 group/project">
             <div
               className={`w-10 h-10 ${
                 project.iconBg || 'bg-slate-700'
@@ -23,7 +28,7 @@ export default function UserProjectsRow({ project, onEdit, formatDate }: UserPro
               <LayoutGrid size={18} className="opacity-80" />
             </div>
             <div>
-              <div className="font-medium text-white">{project.name}</div>
+              <div className="font-medium text-white group-hover/project:text-primary transition-colors">{project.name}</div>
               <div className="text-slate-500 text-xs flex items-center gap-1">
                 {project.projectUrl ? <LinkIcon size={10} /> : null}
                 {project.version || 'v1.0.0'}
@@ -34,7 +39,7 @@ export default function UserProjectsRow({ project, onEdit, formatDate }: UserPro
                 ) : null}
               </div>
             </div>
-          </div>
+          </Link>
         </td>
         <td className="p-5">
           <span
@@ -68,13 +73,23 @@ export default function UserProjectsRow({ project, onEdit, formatDate }: UserPro
         </td>
         <td className="p-5 text-slate-400 text-xs">{formatDate(project.createdAt)}</td>
         <td className="p-5 text-right">
-          <button
-            type="button"
-            onClick={() => onEdit(project)}
-            className="p-2 bg-slate-800 hover:bg-white/5 rounded-lg text-slate-400 hover:text-primary transition-colors border border-white/5 hover:border-primary/30"
-          >
-            <Edit2 size={16} />
-          </button>
+          <div className="flex items-center justify-end gap-2">
+            <Link
+              href={detailHref}
+              className="p-2 bg-slate-800 hover:bg-primary/20 rounded-lg text-slate-400 hover:text-primary transition-colors border border-white/5 hover:border-primary/30"
+              title="Open operations"
+            >
+              <Eye size={16} />
+            </Link>
+            <button
+              type="button"
+              onClick={() => onEdit(project)}
+              className="p-2 bg-slate-800 hover:bg-white/5 rounded-lg text-slate-400 hover:text-primary transition-colors border border-white/5 hover:border-primary/30"
+              title="Edit project"
+            >
+              <Edit2 size={16} />
+            </button>
+          </div>
         </td>
       </tr>
 
@@ -89,7 +104,9 @@ export default function UserProjectsRow({ project, onEdit, formatDate }: UserPro
               <LayoutGrid size={18} className="opacity-80" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">{project.name}</h3>
+              <Link href={detailHref} className="text-sm font-bold text-white hover:text-primary transition-colors">
+                {project.name}
+              </Link>
               <div className="text-slate-500 text-xs flex items-center gap-2 mt-1">
                 <span className="capitalize text-primary font-medium">{project.status}</span>
                 <span>•</span>
@@ -103,13 +120,18 @@ export default function UserProjectsRow({ project, onEdit, formatDate }: UserPro
               <div className="text-xs text-slate-500 mt-1">Owner: {project.ownerName}</div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => onEdit(project)}
-            className="p-2 text-slate-400 hover:text-white bg-slate-800 rounded-lg"
-          >
-            <Edit2 size={16} />
-          </button>
+          <div className="flex gap-2">
+            <Link href={detailHref} className="p-2 text-slate-400 hover:text-primary bg-slate-800 rounded-lg">
+              <Eye size={16} />
+            </Link>
+            <button
+              type="button"
+              onClick={() => onEdit(project)}
+              className="p-2 text-slate-400 hover:text-white bg-slate-800 rounded-lg"
+            >
+              <Edit2 size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </>

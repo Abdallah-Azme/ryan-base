@@ -1,60 +1,131 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
     function isAdmin() {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      return isAuthenticated() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          userDoc().data.role == 'admin')
+      );
     }
 
-    // Leads collection
+    function hasPermission(permission) {
+      return isAdmin() ||
+        (isAuthenticated() &&
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          permission in userDoc().data.permissions);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin() || hasPermission('users.view');
+      allow create: if isOwner(userId) || isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+
+      match /projects/{projectId} {
+        allow read: if isOwner(userId) || hasPermission('projects.view');
+        allow create: if isOwner(userId) || hasPermission('projects.edit_basic');
+        allow update: if isOwner(userId) || hasPermission('projects.edit_basic') ||
+          hasPermission('projects.plan_stages') ||
+          hasPermission('projects.update_progress') ||
+          hasPermission('projects.manage_reports') ||
+          hasPermission('projects.manage_files') ||
+          hasPermission('projects.manage_internal_notes') ||
+          hasPermission('projects.complete');
+        allow delete: if isAdmin();
+      }
+
+      match /notifications/{notificationId} {
+        allow read, update: if isOwner(userId);
+        allow create, delete: if isAdmin();
+      }
+    }
+
     match /leads/{leadId} {
-      // Anyone can read if admin, owner can read their own
-      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      
-      // Allow creation if authenticated. If userId is provided, it must match the auth uid.
-      allow create: if isAuthenticated() && 
-        (!('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid);
-        
-      // Prevent editing after creation unless admin
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read: if hasPermission('leads.view') || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if true;
+      allow update: if hasPermission('leads.review') ||
+        hasPermission('leads.approve') ||
+        hasPermission('leads.reject') ||
+        hasPermission('leads.delete');
+      allow delete: if hasPermission('leads.delete');
     }
 
-    // Appointment Bookings collection
+    match /lead_claim_tokens/{tokenId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if hasPermission('leads.approve');
+    }
+
+    match /project_questions/{questionId} {
+      allow read: if true;
+      allow write: if hasPermission('lead_questions.manage');
+    }
+
+    match /project_types/{typeId} {
+      allow read: if true;
+      allow write: if hasPermission('project_types.manage');
+    }
+
     match /appointment_bookings/{bookingId} {
-      // Anyone can read if admin, owner can read their own
-      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      
-      // Allow creation if authenticated. If userId is provided, it must match the auth uid.
-      allow create: if isAuthenticated() && 
+      allow read: if hasPermission('appointments.view') || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() &&
         (!('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid);
-        
-      // Prevent editing after creation unless admin
-      allow update: if isAdmin();
+      allow update: if hasPermission('appointments.accept') ||
+        hasPermission('appointments.reject') ||
+        hasPermission('appointments.view') ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
     }
 
-    // Prevent users from writing to internal collections used for sending email
-    match /emailLogs/{logId} {
-      allow read, write: if false; // Only Cloud Functions can write here
+    match /appointment_settings/{settingsId} {
+      allow read: if true;
+      allow write: if hasPermission('appointments.settings') || hasPermission('appointments.availability');
     }
 
-    // Default allow for development (since we don't know the full schema)
-    // Replace this with proper rules for production!
-    match /{collection}/{document=**} {
-      allow read, write: if collection != 'leads' && 
-                            collection != 'appointment_bookings' && 
-                            collection != 'emailLogs';
+    match /user_active_appointments/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    match /roles/{roleId} {
+      allow read: if isAdmin() || hasPermission('roles.manage');
+      allow write: if hasPermission('roles.manage');
+    }
+
+    match /employees/{employeeId} {
+      allow read: if isAdmin() || hasPermission('employees.manage') || hasPermission('projects.assign_stage');
+      allow write: if hasPermission('employees.manage');
+    }
+
+    match /notifications/{notificationId} {
+      allow read, update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAdmin() || hasPermission('notifications.send');
+      allow delete: if isAdmin();
+    }
+
+    match /audit_logs/{auditId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /emailLogs/{logId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if isAdmin();
     }
   }
 }

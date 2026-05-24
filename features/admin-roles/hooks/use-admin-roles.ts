@@ -34,10 +34,15 @@ export function useAdminRoles() {
   };
 
   const handleSubmit = (data: RoleValues) => {
+    const roleData = {
+      ...data,
+      description: data.description || '',
+    };
+
     if (editingRole) {
-      roleStore.updateRole(editingRole.id, data);
+      roleStore.updateRole(editingRole.id, roleData);
     } else {
-      roleStore.addRole(data);
+      roleStore.addRole(roleData);
     }
     setIsModalOpen(false);
   };

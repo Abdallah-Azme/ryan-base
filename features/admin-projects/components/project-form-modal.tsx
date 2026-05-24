@@ -8,6 +8,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { projectSchema, ProjectValues } from '../schemas/project.schema';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
+const isValidImageUrl = (url: any): boolean => {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    if (url.startsWith('/')) return true;
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 interface ProjectFormModalProps {
   onClose: () => void;
   editingProject: Project | null;
@@ -34,12 +45,7 @@ export default function ProjectFormModal({
     form.reset(formData);
   }, [formData, form]);
 
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      setFormData(value as ProjectValues);
-    });
-    return () => subscription.unsubscribe();
-  }, [form, setFormData]);
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -158,7 +164,7 @@ export default function ProjectFormModal({
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
-                  {field.value ? (
+                  {isValidImageUrl(field.value) ? (
                     <div className="mt-2 w-16 h-16 bg-slate-800 rounded-xl border border-white/10 overflow-hidden relative group">
                       <div className="relative w-full h-full">
                         <Image src={field.value} alt="Preview" fill className="object-cover" />

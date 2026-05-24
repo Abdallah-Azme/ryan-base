@@ -32,7 +32,7 @@ export default function LoginForm({
   });
 
   return (
-    <form onSubmit={form.handleSubmit(onLogin)} className="flex flex-col gap-5">
+    <form onSubmit={form.handleSubmit(onLogin)} className="flex flex-col">
       <Controller
         name="email"
         control={form.control}
@@ -61,7 +61,7 @@ export default function LoginForm({
         )}
       />
 
-      <div className="flex flex-col gap-1">
+      <div className="mt-8 flex flex-col">
         <Controller
           name="password"
           control={form.control}
@@ -99,7 +99,7 @@ export default function LoginForm({
         type="submit"
         isLoading={loading}
         disabled={loading || resetLoading}
-        className="w-full"
+        className="w-full mt-5"
       >
         {loading ? t('auth.signin_loading') : t('auth.signin_btn')}
       </Button>

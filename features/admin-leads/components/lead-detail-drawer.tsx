@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, X, Copy, CheckCircle, Loader2 } from 'lucide-react';
+import { Clock, MessageCircle, Save, X, Copy, CheckCircle, Loader2 } from 'lucide-react';
 import { Lead } from '@/lib/leadStore';
 import LeadProjectSummary from './lead-project-summary';
 
@@ -14,6 +14,13 @@ interface LeadDetailDrawerProps {
   claimLink: string | null;
   isGeneratingLink: boolean;
   onGenerateLink: (lead: Lead) => void;
+  rejectReason: string;
+  onRejectReasonChange: (value: string) => void;
+  assignedTo: string;
+  onAssignedToChange: (value: string) => void;
+  reviewNotes: string;
+  onReviewNotesChange: (value: string) => void;
+  onSaveReview: () => void;
 }
 
 export default function LeadDetailDrawer({
@@ -26,12 +33,22 @@ export default function LeadDetailDrawer({
   claimLink,
   isGeneratingLink,
   onGenerateLink,
+  rejectReason,
+  onRejectReasonChange,
+  assignedTo,
+  onAssignedToChange,
+  reviewNotes,
+  onReviewNotesChange,
+  onSaveReview,
 }: LeadDetailDrawerProps) {
   const waDigits = toWhatsAppDigits(selectedLead.phone);
   const waMessage = 'السلام عليكم ورحمة الله وبركاته\nحضرتك قدمت عندنا طلب تطبيق ، طلبك مقبول ان شاء الله ممكن تفاصيل اكثر عن المشروع';
   const encodedWaMessage = encodeURIComponent(waMessage);
   const waUrl = waDigits
     ? `https://web.whatsapp.com/send/?phone=${waDigits}&text=${encodedWaMessage}&type=phone_number&app_absent=0`
+    : null;
+  const claimExpiry = selectedLead.claimTokenExpiresAt
+    ? new Date(selectedLead.claimTokenExpiresAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
     : null;
 
   return (
@@ -111,17 +128,6 @@ export default function LeadDetailDrawer({
                   Mark Reviewing
                 </button>
               ) : null}
-              {selectedLead.status !== 'rejected' &&
-              selectedLead.status !== 'claimed' &&
-              selectedLead.status !== 'deleted' ? (
-                <button
-                  type="button"
-                  onClick={() => onUpdateStatus('rejected')}
-                  className="px-3 py-1.5 bg-red-500/10 text-red-400 text-xs rounded-lg hover:bg-red-500/20 border border-red-500/20"
-                >
-                  Reject
-                </button>
-              ) : null}
               {selectedLead.status !== 'deleted' ? (
                 <button
                   type="button"
@@ -157,6 +163,80 @@ export default function LeadDetailDrawer({
           </div>
 
           <LeadProjectSummary projectPayload={selectedLead.projectPayload} />
+
+          <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5 space-y-4">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Review Controls</h3>
+            <div className="space-y-2">
+              <label className="text-xs text-slate-400 font-medium ms-1">Assigned To</label>
+              <input
+                value={assignedTo}
+                onChange={(event) => onAssignedToChange(event.target.value)}
+                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:border-primary focus:outline-none"
+                placeholder="Sales or admin owner"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-slate-400 font-medium ms-1">Internal Review Notes</label>
+              <textarea
+                value={reviewNotes}
+                onChange={(event) => onReviewNotesChange(event.target.value)}
+                className="w-full h-24 resize-none bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:border-primary focus:outline-none"
+                placeholder="Notes visible to dashboard users only."
+              />
+            </div>
+            <button
+              type="button"
+              onClick={onSaveReview}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 text-sm font-bold"
+            >
+              <Save size={15} />
+              Save Review
+            </button>
+          </div>
+
+          {selectedLead.status !== 'rejected' &&
+          selectedLead.status !== 'claimed' &&
+          selectedLead.status !== 'deleted' ? (
+            <div className="bg-red-500/5 p-4 rounded-xl border border-red-500/10 space-y-3">
+              <label className="text-xs text-red-300 font-bold uppercase tracking-wider">Rejection Reason</label>
+              <textarea
+                value={rejectReason}
+                onChange={(event) => onRejectReasonChange(event.target.value)}
+                className="w-full h-20 resize-none bg-slate-950 border border-red-500/20 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:border-red-400 focus:outline-none"
+                placeholder="Required before rejecting this lead."
+              />
+              <button
+                type="button"
+                onClick={() => onUpdateStatus('rejected')}
+                disabled={!rejectReason.trim()}
+                className="px-3 py-1.5 bg-red-500/10 text-red-400 text-xs rounded-lg hover:bg-red-500/20 border border-red-500/20 disabled:opacity-40"
+              >
+                Reject Lead
+              </button>
+            </div>
+          ) : null}
+
+          <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Clock size={15} /> Timeline
+            </h3>
+            {selectedLead.timeline?.length ? (
+              <div className="space-y-3">
+                {selectedLead.timeline.map((item, index) => (
+                  <div key={`${item.action}-${item.createdAt}-${index}`} className="border-l border-primary/30 ps-3">
+                    <p className="text-sm text-white font-bold">{item.action.replace('.', ' ')}</p>
+                    <p className="text-xs text-slate-500">
+                      {new Date(item.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} by{' '}
+                      {item.createdByName || 'Admin'}
+                    </p>
+                    {item.reason ? <p className="text-xs text-slate-400 mt-1">{item.reason}</p> : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">No timeline events yet.</p>
+            )}
+          </div>
 
           {selectedLead.status !== 'rejected' &&
           selectedLead.status !== 'claimed' &&
@@ -198,7 +278,9 @@ export default function LeadDetailDrawer({
                       <Copy size={18} />
                     </button>
                   </div>
-                  <p className="text-slate-500 text-[10px] mt-2">Link expires in 7 days.</p>
+                  <p className="text-slate-500 text-[10px] mt-2">
+                    {claimExpiry ? `Link expires ${claimExpiry}.` : 'Link expires in 7 days.'}
+                  </p>
                 </div>
               )}
             </div>

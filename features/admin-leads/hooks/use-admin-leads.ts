@@ -9,6 +9,9 @@ export function useAdminLeads() {
   const [searchQuery, setSearchQuery] = useState('');
   const [claimLink, setClaimLink] = useState<string | null>(null);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
+  const [reviewNotes, setReviewNotes] = useState('');
   const { language } = useTranslation();
 
   useEffect(() => {
@@ -50,12 +53,33 @@ export function useAdminLeads() {
   const handleUpdateStatus = async (status: Lead['status']) => {
     if (!selectedLead) return;
     if (status === 'rejected') {
-      const reason = prompt('Rejection reason (optional):');
-      await leadStore.updateLeadStatus(selectedLead.id, status, reason || undefined);
+      if (!rejectReason.trim()) return;
+      await leadStore.updateLeadStatus(selectedLead.id, status, rejectReason.trim());
+      setRejectReason('');
     } else {
       await leadStore.updateLeadStatus(selectedLead.id, status);
     }
     setSelectedLead(null);
+  };
+
+  const openLead = (lead: Lead) => {
+    setSelectedLead(lead);
+    setAssignedTo(lead.assignedTo || '');
+    setReviewNotes(lead.reviewNotes || '');
+    setRejectReason(lead.rejectReason || '');
+  };
+
+  const handleSaveReview = async () => {
+    if (!selectedLead) return;
+    await leadStore.updateLeadReview(selectedLead.id, {
+      assignedTo: assignedTo.trim(),
+      reviewNotes: reviewNotes.trim(),
+    });
+    setSelectedLead({
+      ...selectedLead,
+      assignedTo: assignedTo.trim(),
+      reviewNotes: reviewNotes.trim(),
+    });
   };
 
   const handleDeleteLead = async () => {
@@ -90,6 +114,7 @@ export function useAdminLeads() {
     leads,
     selectedLead,
     setSelectedLead,
+    openLead,
     statusFilter,
     setStatusFilter,
     searchQuery,
@@ -97,10 +122,17 @@ export function useAdminLeads() {
     claimLink,
     setClaimLink,
     isGeneratingLink,
+    rejectReason,
+    setRejectReason,
+    assignedTo,
+    setAssignedTo,
+    reviewNotes,
+    setReviewNotes,
     language,
     filteredLeads,
     handleGenerateLink,
     handleUpdateStatus,
+    handleSaveReview,
     handleDeleteLead,
     toWhatsAppDigits,
   };

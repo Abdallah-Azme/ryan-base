@@ -10,6 +10,7 @@ export const statusOptions: ProjectStatus[] = [
   'development',
   'publishing',
   'support',
+  'completed',
   'cancelled',
 ];
 
@@ -140,7 +141,7 @@ export function useAdminUserProjects() {
 
       const updates = {
         name: data.name,
-        description: data.description,
+        description: data.description || '',
         estimatedPrice: data.estimatedPrice !== '' ? Number(data.estimatedPrice) : null,
         estimatedDuration: data.estimatedDuration !== '' ? Number(data.estimatedDuration) : null,
         status: data.status,

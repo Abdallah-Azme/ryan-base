@@ -11,11 +11,13 @@ import { Field, FieldLabel, FieldError, PasswordInput } from '@/components/ui/fi
 interface SignupFormProps {
   loading: boolean;
   onSubmit: (data: SignupValues) => void;
+  defaultValues?: Partial<SignupValues>;
 }
 
 export default function SignupForm({
   loading,
   onSubmit,
+  defaultValues,
 }: SignupFormProps) {
   const { t, dir } = useTranslation();
 
@@ -29,12 +31,13 @@ export default function SignupForm({
       password: '',
       confirmPassword: '',
       agreed: false,
+      ...defaultValues,
     },
   });
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-4">
         <Controller
           name="firstName"
           control={form.control}
@@ -176,7 +179,7 @@ export default function SignupForm({
         name="agreed"
         control={form.control}
         render={({ field, fieldState }) => (
-          <div className="mt-2">
+          <div className="mt-1">
             <label className="flex items-center space-x-3 rtl:space-x-reverse cursor-pointer group w-fit">
               <div
                 className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
@@ -202,7 +205,7 @@ export default function SignupForm({
         )}
       />
 
-      <Button type="submit" isLoading={loading} disabled={loading} className="w-full py-3.5 mt-6">
+      <Button type="submit" isLoading={loading} disabled={loading} className="w-full py-3.5 mt-4">
         {loading ? t('auth.signup_loading') : t('auth.signup_btn')}
       </Button>
     </form>

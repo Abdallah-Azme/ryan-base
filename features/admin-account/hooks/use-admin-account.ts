@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { updateProfile, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase-client';
+import { AdminProfileValues } from '../schemas/profile.schema';
 
 export function useAdminAccount() {
   const [user, setUser] = useState(auth.currentUser);
@@ -68,14 +69,13 @@ export function useAdminAccount() {
     fetchAdminData();
   }, [user]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (data: AdminProfileValues) => {
     if (!user) return;
     setIsSaving(true);
     setSuccess(false);
 
     try {
-      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      const fullName = `${data.firstName} ${data.lastName}`.trim();
 
       await updateProfile(user, {
         displayName: fullName,
@@ -84,8 +84,15 @@ export function useAdminAccount() {
       const docRef = doc(db, 'admins', user.uid);
       await updateDoc(docRef, {
         name: fullName,
-        phone: formData.phone,
+        phone: data.phone || '',
       });
+
+      setFormData((prev) => ({
+        ...prev,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone || '',
+      }));
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

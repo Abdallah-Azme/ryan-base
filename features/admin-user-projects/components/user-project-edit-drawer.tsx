@@ -34,12 +34,7 @@ export default function UserProjectEditDrawer({
     form.reset(formData);
   }, [formData, form]);
 
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      setFormData(value as UserProjectEditValues);
-    });
-    return () => subscription.unsubscribe();
-  }, [form, setFormData]);
+
 
   const industry = form.watch('industry');
 
